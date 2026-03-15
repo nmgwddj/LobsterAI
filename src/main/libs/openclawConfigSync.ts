@@ -8,6 +8,7 @@ import { resolveRawApiConfig } from './claudeSettings';
 import type { OpenClawEngineManager } from './openclawEngineManager';
 import { parseChannelSessionKey } from './openclawChannelSessionSync';
 import type { McpToolManifestEntry } from './mcpServerManager';
+import { hasBundledOpenClawExtension } from './openclawLocalExtensions';
 import { buildScheduledTaskEnginePrompt } from './scheduledTaskEnginePrompt';
 
 export type McpBridgeConfig = {
@@ -278,6 +279,10 @@ const readPreinstalledPluginIds = (): string[] => {
   }
 };
 
+const isBundledPluginAvailable = (pluginId: string): boolean => {
+  return hasBundledOpenClawExtension(pluginId);
+};
+
 export type OpenClawConfigSyncResult = {
   ok: boolean;
   changed: boolean;
@@ -367,6 +372,7 @@ export class OpenClawConfigSync {
     const workspaceDir = (coworkConfig.workingDirectory || '').trim();
 
     const preinstalledPluginIds = readPreinstalledPluginIds();
+    const hasMcpBridgePlugin = isBundledPluginAvailable('mcp-bridge');
 
     const dingTalkConfig = this.getDingTalkConfig();
     // DingTalk runs through OpenClaw plugin but still needs the gateway HTTP endpoint (chatCompletions)
@@ -435,46 +441,45 @@ export class OpenClawConfigSync {
         maxConcurrentRuns: 3,
         sessionRetention: '7d',
       },
-      ...(preinstalledPluginIds.length > 0
-        ? {
-            plugins: {
-              entries: {
-                ...Object.fromEntries(
-                  preinstalledPluginIds.map((id) => {
-                    // Sync plugin enabled state with the corresponding channel config.
-                    // When a channel is disabled in the UI, its plugin must also be
-                    // disabled so OpenClaw doesn't load it at all.
-                    const pluginEnabled = (() => {
-                      if (id === 'dingtalk-connector') return !!(dingTalkConfig?.enabled && dingTalkConfig.clientId);
-                      if (id === 'feishu-openclaw-plugin') return !!(feishuConfig?.enabled && feishuConfig.appId);
-                      if (id === 'qqbot') return !!(qqConfig?.enabled && qqConfig.appId);
-                      if (id === 'wecom-openclaw-plugin') return !!(wecomConfig?.enabled && wecomConfig.botId);
-                      return true; // other plugins stay enabled
-                    })();
-                    return [id, { enabled: pluginEnabled }];
-                  }),
-                ),
-                // Disable the built-in feishu plugin when the official one is preinstalled
-                ...(preinstalledPluginIds.includes('feishu-openclaw-plugin')
-                  ? { feishu: { enabled: false } }
-                  : {}),
-                'mcp-bridge': { enabled: true },
+      ...((() => {
+        const pluginEntries: Record<string, unknown> = {
+          ...Object.fromEntries(
+            preinstalledPluginIds.map((id) => {
+              // Sync plugin enabled state with the corresponding channel config.
+              // When a channel is disabled in the UI, its plugin must also be
+              // disabled so OpenClaw doesn't load it at all.
+              const pluginEnabled = (() => {
+                if (id === 'dingtalk-connector') return !!(dingTalkConfig?.enabled && dingTalkConfig.clientId);
+                if (id === 'feishu-openclaw-plugin') return !!(feishuConfig?.enabled && feishuConfig.appId);
+                if (id === 'qqbot') return !!(qqConfig?.enabled && qqConfig.appId);
+                if (id === 'wecom-openclaw-plugin') return !!(wecomConfig?.enabled && wecomConfig.botId);
+                return true; // other plugins stay enabled
+              })();
+              return [id, { enabled: pluginEnabled }];
+            }),
+          ),
+          ...(preinstalledPluginIds.includes('feishu-openclaw-plugin')
+            ? { feishu: { enabled: false } }
+            : {}),
+          ...(hasMcpBridgePlugin
+            ? { 'mcp-bridge': { enabled: true } }
+            : {}),
+        };
+
+        return Object.keys(pluginEntries).length > 0
+          ? {
+              plugins: {
+                entries: pluginEntries,
               },
-            },
-          }
-        : {
-            plugins: {
-              entries: {
-                'mcp-bridge': { enabled: true },
-              },
-            },
-          }),
+            }
+          : {};
+      })())
     };
 
     // Sync MCP Bridge config into the plugin's own config section
     // (root-level keys are rejected by OpenClaw's strict schema validation)
     const mcpBridgeCfg = this.getMcpBridgeConfig?.();
-    if (mcpBridgeCfg && mcpBridgeCfg.tools.length > 0) {
+    if (hasMcpBridgePlugin && mcpBridgeCfg && mcpBridgeCfg.tools.length > 0 && managedConfig.plugins) {
       const plugins = managedConfig.plugins as Record<string, unknown>;
       const entries = plugins.entries as Record<string, Record<string, unknown>>;
       entries['mcp-bridge'] = {

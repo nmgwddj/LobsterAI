@@ -5,6 +5,7 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import { getElectronNodeRuntimePath } from './coworkUtil';
+import { syncLocalOpenClawExtensionsIntoRuntime } from './openclawLocalExtensions';
 import { applyBundledOpenClawRuntimeHotfixes } from './openclawRuntimeHotfix';
 
 const DEFAULT_OPENCLAW_VERSION = '2026.2.23';
@@ -254,6 +255,11 @@ export class OpenClawEngineManager extends EventEmitter {
         canRetry: true,
       });
       return this.getStatus();
+    }
+
+    const localExtensionSync = syncLocalOpenClawExtensionsIntoRuntime(runtime.root);
+    if (localExtensionSync.copied.length > 0) {
+      console.log(`[OpenClaw] synced local extensions: ${localExtensionSync.copied.join(', ')}`);
     }
 
     if (this.status.phase === 'running') {

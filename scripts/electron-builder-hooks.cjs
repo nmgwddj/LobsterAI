@@ -6,6 +6,7 @@ const { spawnSync } = require('child_process');
 const asar = require('@electron/asar');
 const { ensurePortableGit } = require('./setup-mingit.js');
 const { ensurePortablePythonRuntime, checkRuntimeHealth } = require('./setup-python-runtime.js');
+const { syncLocalOpenClawExtensions } = require('./sync-local-openclaw-extensions.cjs');
 
 function isWindowsTarget(context) {
   return context?.electronPlatformName === 'win32';
@@ -125,6 +126,11 @@ function verifyPreinstalledPlugins(runtimeRoot, buildHint) {
 function ensureBundledOpenClawRuntime(context) {
   const { runtimeRoot, targetId } = syncCurrentOpenClawRuntimeForTarget(context);
   const buildHint = getOpenClawRuntimeBuildHint(targetId);
+
+  const localMcpBridgeDir = path.join(runtimeRoot, 'extensions', 'mcp-bridge');
+  if (!existsSync(localMcpBridgeDir)) {
+    syncLocalOpenClawExtensions(runtimeRoot);
+  }
 
   const requiredExternalPaths = [
     path.join(runtimeRoot, 'node_modules'),
