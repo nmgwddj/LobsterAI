@@ -267,6 +267,11 @@ test('sync writes scheduled-task policy into managed AGENTS.md for native channe
   assert.equal(result.ok, true);
 
   const agentsMd = fs.readFileSync(path.join(workspaceDir, 'AGENTS.md'), 'utf8');
+  assert.match(agentsMd, /# AGENTS\.md - Your Workspace/);
+  assert.match(agentsMd, /## Every Session/);
+  assert.match(agentsMd, /Read `SOUL\.md`/);
+  assert.match(agentsMd, /Read `USER\.md`/);
+  assert.match(agentsMd, /If in MAIN SESSION.*Also read `MEMORY\.md`/s);
   assert.match(agentsMd, /## Scheduled Tasks/);
   assert.match(agentsMd, /## Web Search/);
   assert.match(agentsMd, /Built-in `web_search` is disabled in this workspace\./);
@@ -283,6 +288,67 @@ test('sync writes scheduled-task policy into managed AGENTS.md for native channe
   assert.match(agentsMd, /do not use `sessions_spawn`, `subagents`, or ad-hoc background workflows as a substitute for `cron\.add`/i);
   assert.match(agentsMd, /## System Prompt/);
   assert.match(agentsMd, /Always answer in Chinese\./);
+});
+
+test('sync preserves existing AGENTS.md content above the Lobster managed marker', (t) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openclaw-config-sync-agents-preserve-'));
+  t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
+  setElectronPaths(tmpDir);
+
+  const workspaceDir = path.join(tmpDir, 'workspace');
+  fs.mkdirSync(workspaceDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(workspaceDir, 'AGENTS.md'),
+    '# Custom Workspace Notes\n\nKeep this line.\n',
+    'utf8',
+  );
+
+  const sync = createSync(tmpDir, createAppConfig(), {
+    workingDirectory: workspaceDir,
+  });
+  const result = sync.sync('test-agents-preserve');
+
+  assert.equal(result.ok, true);
+
+  const agentsMd = fs.readFileSync(path.join(workspaceDir, 'AGENTS.md'), 'utf8');
+  assert.match(agentsMd, /^# Custom Workspace Notes\n\nKeep this line\./);
+  assert.match(agentsMd, /<!-- LobsterAI managed: do not edit below this line -->/);
+  assert.doesNotMatch(agentsMd, /^# AGENTS\.md - Your Workspace/m);
+});
+
+test('sync backfills the default OpenClaw AGENTS template when an old workspace only has Lobster managed content', (t) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openclaw-config-sync-agents-backfill-'));
+  t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
+  setElectronPaths(tmpDir);
+
+  const workspaceDir = path.join(tmpDir, 'workspace');
+  fs.mkdirSync(workspaceDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(workspaceDir, 'AGENTS.md'),
+    [
+      '<!-- LobsterAI managed: do not edit below this line -->',
+      '',
+      '## System Prompt',
+      '',
+      'Old managed-only content.',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+
+  const sync = createSync(tmpDir, createAppConfig(), {
+    workingDirectory: workspaceDir,
+  });
+  const result = sync.sync('test-agents-backfill');
+
+  assert.equal(result.ok, true);
+
+  const agentsMd = fs.readFileSync(path.join(workspaceDir, 'AGENTS.md'), 'utf8');
+  assert.match(agentsMd, /^# AGENTS\.md - Your Workspace/m);
+  assert.match(agentsMd, /## Every Session/);
+  assert.match(agentsMd, /<!-- LobsterAI managed: do not edit below this line -->/);
+  assert.match(agentsMd, /## Scheduled Tasks/);
+  assert.doesNotMatch(agentsMd, /Old managed-only content\./);
 });
 
 test('sync disables legacy qqbot-cron skill so QQ reminders use native cron', (t) => {

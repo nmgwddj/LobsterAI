@@ -78,6 +78,100 @@ const MANAGED_WEB_SEARCH_POLICY_PROMPT = [
   'Do not claim you searched the web unless you actually used `browser`, `web_fetch`, or the LobsterAI `web-search` skill.',
 ].join('\n');
 
+const FALLBACK_OPENCLAW_AGENTS_TEMPLATE = [
+  '# AGENTS.md - Your Workspace',
+  '',
+  'This folder is home. Treat it that way.',
+  '',
+  '## First Run',
+  '',
+  'If `BOOTSTRAP.md` exists, follow it first, then delete it when you are done.',
+  '',
+  '## Every Session',
+  '',
+  'Before doing anything else:',
+  '',
+  '1. Read `SOUL.md`.',
+  '2. Read `USER.md`.',
+  '3. Read `memory/YYYY-MM-DD.md` for today and yesterday.',
+  '4. In the main session, also read `MEMORY.md`.',
+  '',
+  'Do not ask permission first.',
+  '',
+  '## Memory',
+  '',
+  '- `memory/YYYY-MM-DD.md` stores raw daily notes.',
+  '- `MEMORY.md` stores durable facts, preferences, and decisions.',
+  '- If something should survive a restart, write it to a file.',
+  '',
+  '## Safety',
+  '',
+  '- Do not exfiltrate private data.',
+  '- Do not run destructive commands without asking.',
+  '- When in doubt, ask.',
+  '',
+  '## Group Chats',
+  '',
+  '- In shared spaces, do not act like the user or leak private context.',
+  '- If you have nothing useful to add, stay quiet.',
+  '',
+  '## Tools',
+  '',
+  '- Skills provide tools. Read each skill before using it.',
+  '- Keep local environment notes in `TOOLS.md`.',
+  '',
+  '## Heartbeats',
+  '',
+  '- Use `HEARTBEAT.md` for proactive background checks and reminders.',
+  '- Prefer cron for exact schedules and heartbeat for periodic checks.',
+].join('\n');
+
+const stripTemplateFrontMatter = (content: string): string => {
+  if (!content.startsWith('---')) {
+    return content.trim();
+  }
+
+  const endIndex = content.indexOf('\n---', 3);
+  if (endIndex < 0) {
+    return content.trim();
+  }
+
+  return content.slice(endIndex + 4).trim();
+};
+
+const resolveBundledOpenClawAgentsTemplatePaths = (): string[] => {
+  const runtimeRoots = app.isPackaged === true
+    ? [path.join(process.resourcesPath, 'cfmind')]
+    : [
+        path.join(app.getAppPath(), 'vendor', 'openclaw-runtime', 'current'),
+        path.join(process.cwd(), 'vendor', 'openclaw-runtime', 'current'),
+      ];
+
+  return runtimeRoots.map((runtimeRoot) => path.join(
+    runtimeRoot,
+    'docs',
+    'reference',
+    'templates',
+    'AGENTS.md',
+  ));
+};
+
+const readBundledOpenClawAgentsTemplate = (): string => {
+  for (const templatePath of resolveBundledOpenClawAgentsTemplatePaths()) {
+    try {
+      const content = fs.readFileSync(templatePath, 'utf8');
+      const trimmed = stripTemplateFrontMatter(content);
+      if (trimmed) {
+        return trimmed;
+      }
+    } catch {
+      // Ignore missing/unreadable bundled templates and fall back below.
+    }
+  }
+
+  return FALLBACK_OPENCLAW_AGENTS_TEMPLATE;
+};
+
 const sessionSnapshotContainsDisabledManagedSkill = (entry: Record<string, unknown>): boolean => {
   const skillsSnapshot = entry.skillsSnapshot;
   if (!skillsSnapshot || typeof skillsSnapshot !== 'object') {
@@ -857,13 +951,14 @@ export class OpenClawConfigSync {
       const userContent = markerIdx >= 0
         ? existingContent.slice(0, markerIdx).trimEnd()
         : existingContent.trimEnd();
+      const preservedUserContent = userContent || readBundledOpenClawAgentsTemplate();
 
       if (sections.length === 0) {
         // No managed content — remove the managed section if present,
         // but preserve user content.
         if (markerIdx >= 0) {
-          if (userContent) {
-            const cleaned = userContent + '\n';
+          if (preservedUserContent) {
+            const cleaned = preservedUserContent + '\n';
             if (existingContent !== cleaned) {
               this.atomicWriteFile(agentsMdPath, cleaned);
             }
@@ -875,8 +970,8 @@ export class OpenClawConfigSync {
       }
 
       const managedContent = `${MARKER}\n\n${sections.join('\n\n')}`;
-      const nextContent = userContent
-        ? `${userContent}\n\n${managedContent}\n`
+      const nextContent = preservedUserContent
+        ? `${preservedUserContent}\n\n${managedContent}\n`
         : `${managedContent}\n`;
 
       // Only write if content actually changed
