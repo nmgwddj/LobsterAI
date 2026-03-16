@@ -927,11 +927,22 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
 
     const client = this.requireGatewayClient();
     try {
+      const attachments = options.imageAttachments?.length
+        ? options.imageAttachments.map((img) => ({
+          type: 'image',
+          mimeType: img.mimeType,
+          content: img.base64Data,
+        }))
+        : undefined;
+      if (attachments) {
+        console.log('[OpenClawRuntime] chat.send with attachments:', attachments.length, 'images,', attachments.map(a => ({ type: a.type, mimeType: a.mimeType, contentLength: a.content?.length ?? 0 })));
+      }
       const sendResult = await client.request<Record<string, unknown>>('chat.send', {
         sessionKey,
         message: outboundMessage,
         deliver: false,
         idempotencyKey: runId,
+        ...(attachments ? { attachments } : {}),
       });
       const returnedRunId = typeof sendResult?.runId === 'string' ? sendResult.runId.trim() : '';
       if (returnedRunId) {
@@ -2061,7 +2072,14 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
   }
 
   private handleChatError(sessionId: string, _turn: ActiveTurn, payload: ChatEventPayload): void {
-    const errorMessage = payload.errorMessage?.trim() || 'OpenClaw run failed';
+    let errorMessage = payload.errorMessage?.trim() || 'OpenClaw run failed';
+
+    // Detect model API errors that are likely caused by unsupported image content
+    // in tool results (e.g., Read tool returning image blocks for non-vision models).
+    if (/^4\d{2}\b/.test(errorMessage)) {
+      errorMessage += '\n\n[Hint: If the model attempted to read an image file, this may be because the model does not support image input. Consider using a vision-capable model or avoid sending image files.]';
+    }
+
     this.store.updateSession(sessionId, { status: 'error' });
     this.emit('error', sessionId, errorMessage);
     this.cleanupSessionTurn(sessionId);

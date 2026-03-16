@@ -23,6 +23,7 @@ const MOONSHOT_CODING_PLAN_ANTHROPIC_BASE_URL = 'https://api.kimi.com/coding';
 
 type ProviderModel = {
   id: string;
+  supportsImage?: boolean;
 };
 
 type ProviderConfig = {
@@ -48,6 +49,7 @@ export type ApiConfigResolution = {
   providerMetadata?: {
     providerName: string;
     codingPlanEnabled: boolean;
+    supportsImage?: boolean;
   };
 };
 
@@ -91,6 +93,7 @@ type MatchedProvider = {
   modelId: string;
   apiFormat: AnthropicApiFormat;
   baseURL: string;
+  supportsImage?: boolean;
 };
 
 function getEffectiveProviderApiFormat(providerName: string, apiFormat: unknown): AnthropicApiFormat {
@@ -224,6 +227,8 @@ function resolveMatchedProvider(appConfig: AppConfig): { matched: MatchedProvide
     return { matched: null, error: `Provider ${providerName} requires API key for Anthropic-compatible mode.` };
   }
 
+  const matchedModel = providerConfig.models?.find((m) => m.id === modelId);
+
   return {
     matched: {
       providerName,
@@ -231,6 +236,7 @@ function resolveMatchedProvider(appConfig: AppConfig): { matched: MatchedProvide
       modelId,
       apiFormat,
       baseURL,
+      supportsImage: matchedModel?.supportsImage,
     },
   };
 }
@@ -279,6 +285,7 @@ export function resolveCurrentApiConfig(target: OpenAICompatProxyTarget = 'local
       providerMetadata: {
         providerName: matched.providerName,
         codingPlanEnabled: !!matched.providerConfig.codingPlanEnabled,
+        supportsImage: matched.supportsImage,
       },
     };
   }
@@ -355,6 +362,7 @@ export function resolveRawApiConfig(): ApiConfigResolution {
     providerMetadata: {
       providerName: matched.providerName,
       codingPlanEnabled: !!matched.providerConfig.codingPlanEnabled,
+      supportsImage: matched.supportsImage,
     },
   };
 }

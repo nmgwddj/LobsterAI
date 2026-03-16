@@ -266,9 +266,11 @@ const buildProviderSelection = (options: {
   apiType: 'anthropic' | 'openai' | undefined;
   providerName?: string;
   codingPlanEnabled?: boolean;
+  supportsImage?: boolean;
 }): OpenClawProviderSelection => {
   const providerModelName = normalizeModelName(options.modelId);
   const providerApi = mapApiTypeToOpenClawApi(options.apiType);
+  const modelInput: string[] = options.supportsImage ? ['text', 'image'] : ['text'];
   const providerName = options.providerName ?? '';
   const codingPlanEnabled = !!options.codingPlanEnabled;
 
@@ -288,7 +290,7 @@ const buildProviderSelection = (options: {
             id: 'k2p5',
             name: 'Kimi K2.5',
             api: 'anthropic-messages',
-            input: ['text', 'image'],
+            input: modelInput,
             reasoning: true,
             cost: {
               input: 0,
@@ -321,7 +323,7 @@ const buildProviderSelection = (options: {
             id: options.modelId,
             name: providerModelName,
             api: 'openai-completions',
-            input: ['text', 'image'],
+            input: modelInput,
             reasoning: supportsThinking,
             cost: {
               input: 0,
@@ -352,7 +354,7 @@ const buildProviderSelection = (options: {
           id: options.modelId,
           name: providerModelName,
           api: providerApi,
-          input: ['text'],
+          input: modelInput,
         },
       ],
     },
@@ -460,6 +462,7 @@ export class OpenClawConfigSync {
       apiType,
       providerName: apiResolution.providerMetadata?.providerName,
       codingPlanEnabled: apiResolution.providerMetadata?.codingPlanEnabled,
+      supportsImage: apiResolution.providerMetadata?.supportsImage,
     });
     const sandboxMode = mapExecutionModeToSandboxMode(coworkConfig.executionMode || 'auto');
 

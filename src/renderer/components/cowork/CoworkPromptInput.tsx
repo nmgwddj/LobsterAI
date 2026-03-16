@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { PaperAirplaneIcon, StopIcon, FolderIcon } from '@heroicons/react/24/solid';
-import { PhotoIcon } from '@heroicons/react/24/outline';
+import { PhotoIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import PaperClipIcon from '../icons/PaperClipIcon';
 import XMarkIcon from '../icons/XMarkIcon';
 import ModelSelector from '../ModelSelector';
@@ -115,6 +115,7 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
     const [showFolderRequiredWarning, setShowFolderRequiredWarning] = useState(false);
     const [isDraggingFiles, setIsDraggingFiles] = useState(false);
     const [isAddingFile, setIsAddingFile] = useState(false);
+    const [imageVisionHint, setImageVisionHint] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const folderButtonRef = useRef<HTMLButtonElement>(null);
     const dragDepthRef = useRef(0);
@@ -261,6 +262,7 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
     setValue('');
     dispatch(setDraftPrompt(''));
     setAttachments([]);
+    setImageVisionHint(false);
   }, [value, isStreaming, disabled, onSubmit, activeSkillIds, skills, attachments, showFolderSelector, workingDirectory, dispatch]);
 
   const handleSelectSkill = useCallback((skill: Skill) => {
@@ -406,6 +408,7 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
     const files = Array.from(fileList ?? []);
     if (files.length === 0) return;
 
+    let hasImageWithoutVision = false;
     for (const file of files) {
       const nativePath = getNativeFilePath(file);
 
@@ -414,34 +417,38 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
         ? isImagePath(nativePath)
         : isImageMimeType(file.type);
 
-      if (fileIsImage && modelSupportsImage) {
-        // For images on vision-capable models, read as data URL
-        if (nativePath) {
-          try {
-            const result = await window.electron.dialog.readFileAsDataUrl(nativePath);
-            if (result.success && result.dataUrl) {
-              addAttachment(nativePath, { isImage: true, dataUrl: result.dataUrl });
-              continue;
+      if (fileIsImage) {
+        if (modelSupportsImage) {
+          // For images on vision-capable models, read as data URL
+          if (nativePath) {
+            try {
+              const result = await window.electron.dialog.readFileAsDataUrl(nativePath);
+              if (result.success && result.dataUrl) {
+                addAttachment(nativePath, { isImage: true, dataUrl: result.dataUrl });
+                continue;
+              }
+            } catch (error) {
+              console.error('Failed to read image as data URL:', error);
             }
-          } catch (error) {
-            console.error('Failed to read image as data URL:', error);
-          }
-          // Fallback: add as regular file attachment
-          addAttachment(nativePath);
-        } else {
-          // No native path (clipboard/drag from browser) - read via FileReader
-          try {
-            const dataUrl = await fileToDataUrl(file);
-            addImageAttachmentFromDataUrl(file.name, dataUrl);
-          } catch (error) {
-            console.error('Failed to read image from clipboard:', error);
-            const stagedPath = await saveInlineFile(file);
-            if (stagedPath) {
-              addAttachment(stagedPath);
+            // Fallback: add as regular file attachment
+            addAttachment(nativePath);
+          } else {
+            // No native path (clipboard/drag from browser) - read via FileReader
+            try {
+              const dataUrl = await fileToDataUrl(file);
+              addImageAttachmentFromDataUrl(file.name, dataUrl);
+            } catch (error) {
+              console.error('Failed to read image from clipboard:', error);
+              const stagedPath = await saveInlineFile(file);
+              if (stagedPath) {
+                addAttachment(stagedPath);
+              }
             }
           }
+          continue;
         }
-        continue;
+        // Model doesn't support image input — add as file path and show hint
+        hasImageWithoutVision = true;
       }
 
       // Non-image file or model doesn't support images: use original flow
@@ -455,6 +462,9 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
         addAttachment(stagedPath);
       }
     }
+    if (hasImageWithoutVision) {
+      setImageVisionHint(true);
+    }
   }, [addAttachment, addImageAttachmentFromDataUrl, disabled, fileToDataUrl, getNativeFilePath, isStreaming, modelSupportsImage, saveInlineFile]);
 
   const handleAddFile = useCallback(async () => {
@@ -465,19 +475,27 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
         title: i18nService.t('coworkAddFile'),
       });
       if (!result.success || result.paths.length === 0) return;
+      let hasImageWithoutVision = false;
       for (const filePath of result.paths) {
-        if (isImagePath(filePath) && modelSupportsImage) {
-          try {
-            const readResult = await window.electron.dialog.readFileAsDataUrl(filePath);
-            if (readResult.success && readResult.dataUrl) {
-              addAttachment(filePath, { isImage: true, dataUrl: readResult.dataUrl });
-              continue;
+        if (isImagePath(filePath)) {
+          if (modelSupportsImage) {
+            try {
+              const readResult = await window.electron.dialog.readFileAsDataUrl(filePath);
+              if (readResult.success && readResult.dataUrl) {
+                addAttachment(filePath, { isImage: true, dataUrl: readResult.dataUrl });
+                continue;
+              }
+            } catch (error) {
+              console.error('Failed to read image as data URL:', error);
             }
-          } catch (error) {
-            console.error('Failed to read image as data URL:', error);
+          } else {
+            hasImageWithoutVision = true;
           }
         }
         addAttachment(filePath);
+      }
+      if (hasImageWithoutVision) {
+        setImageVisionHint(true);
       }
     } catch (error) {
       console.error('Failed to select file:', error);
@@ -573,6 +591,23 @@ const CoworkPromptInput = React.forwardRef<CoworkPromptInputRef, CoworkPromptInp
                 </button>
               </div>
           ))}
+        </div>
+      )}
+      {imageVisionHint && (
+        <div className="mb-2 flex items-start gap-1.5 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2.5 py-1.5 text-xs text-amber-700 dark:text-amber-400">
+          <ExclamationTriangleIcon className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+          <span>
+            {i18nService.getLanguage() === 'zh'
+              ? '当前模型未启用图片输入，图片将以文件路径形式发送。若该模型本身支持图片理解，可在模型配置中开启图片输入选项。'
+              : 'Image input is not enabled for the current model. Images will be sent as file paths. If the model supports vision, you can enable image input in the model configuration.'}
+          </span>
+          <button
+            type="button"
+            onClick={() => setImageVisionHint(false)}
+            className="ml-auto flex-shrink-0 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50"
+          >
+            <XMarkIcon className="h-3 w-3" />
+          </button>
         </div>
       )}
       <div
