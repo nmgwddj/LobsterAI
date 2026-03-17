@@ -66,6 +66,7 @@ export const CHANNEL_PLATFORM_MAP: Record<string, IMPlatform> = {
   qqbot: 'qq',
   wecom: 'wecom',
   'wecom-openclaw-plugin': 'wecom',
+  nim: 'nim',
 };
 
 /** Parse a channel sessionKey into platform + conversationId.
@@ -154,6 +155,7 @@ const CHANNEL_TITLE_PREFIX: Record<string, string> = {
   qq: '[QQ]',
   wecom: '[企微]',
   'wecom-openclaw-plugin': '[企微]',
+  nim: '[云信]',
 };
 
 export interface ChannelSessionSyncDeps {

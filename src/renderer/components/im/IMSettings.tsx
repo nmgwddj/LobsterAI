@@ -14,6 +14,8 @@ import { i18nService } from '../../services/i18n';
 import type { IMPlatform, IMConnectivityCheck, IMConnectivityTestResult, IMGatewayConfig, TelegramOpenClawConfig, DiscordOpenClawConfig, FeishuOpenClawConfig, DingTalkOpenClawConfig, QQOpenClawConfig, WecomOpenClawConfig } from '../../types/im';
 import { getVisibleIMPlatforms } from '../../utils/regionFilter';
 import WecomAIBotSDK from '@wecom/wecom-aibot-sdk';
+import { SchemaForm } from './SchemaForm';
+import type { UiHint } from './SchemaForm';
 
 // Platform metadata - logos only, labels use i18n
 const platformLogos: Record<IMPlatform, string> = {
@@ -97,6 +99,19 @@ function translateIMError(error: string | null): string {
   return error;
 }
 
+// Helper function to deep-set a value in nested object by dot path
+function deepSet(obj: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
+  const keys = path.split('.');
+  const result = { ...obj };
+  let current: Record<string, unknown> = result;
+  for (let i = 0; i < keys.length - 1; i++) {
+    current[keys[i]] = { ...(current[keys[i]] as Record<string, unknown> || {}) };
+    current = current[keys[i]] as Record<string, unknown>;
+  }
+  current[keys[keys.length - 1]] = value;
+  return result;
+}
+
 const IMSettings: React.FC = () => {
   const dispatch = useDispatch();
   const { config, status, isLoading } = useSelector((state: RootState) => state.im);
@@ -115,12 +130,9 @@ const IMSettings: React.FC = () => {
   const [wecomQuickSetupStatus, setWecomQuickSetupStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [wecomQuickSetupError, setWecomQuickSetupError] = useState<string>('');
   const isMountedRef = useRef(true);
-  // Track the last-persisted NIM credentials so we can detect real changes on save
-  const savedNimConfigRef = useRef<{ appKey: string; account: string; token: string }>({
-    appKey: config.nim.appKey,
-    account: config.nim.account,
-    token: config.nim.token,
-  });
+
+  // OpenClaw config schema for schema-driven forms
+  const [openclawSchema, setOpenclawSchema] = useState<{ schema: Record<string, unknown>; uiHints: Record<string, Record<string, unknown>> } | null>(null);
 
   // Subscribe to language changes
   useEffect(() => {
@@ -155,6 +167,10 @@ const IMSettings: React.FC = () => {
     void imService.init().then(() => {
       if (!cancelled) {
         setConfigLoaded(true);
+        // Fetch OpenClaw config schema for schema-driven rendering
+        imService.getOpenClawConfigSchema().then(schema => {
+          if (schema && isMountedRef.current) setOpenclawSchema(schema);
+        });
       }
     });
     return () => {
@@ -163,6 +179,31 @@ const IMSettings: React.FC = () => {
       imService.destroy();
     };
   }, []);
+
+  // Extract NIM channel schema and hints from the full OpenClaw config schema
+  const nimSchemaData = useMemo(() => {
+    if (!openclawSchema) return null;
+    const { schema, uiHints } = openclawSchema;
+
+    // Find the NIM channel key — could be 'nim' or 'openclaw-nim'
+    const channelsProps = (schema as any)?.properties?.channels?.properties ?? {};
+    const channelKey = channelsProps['openclaw-nim'] ? 'openclaw-nim' : channelsProps['nim'] ? 'nim' : null;
+    if (!channelKey) return null;
+
+    const channelSchema = channelsProps[channelKey] as Record<string, unknown>;
+    if (!channelSchema) return null;
+
+    // Filter and strip prefix from uiHints
+    const prefix = `channels.${channelKey}.`;
+    const hints: Record<string, UiHint> = {};
+    for (const [key, value] of Object.entries(uiHints)) {
+      if (key.startsWith(prefix)) {
+        hints[key.slice(prefix.length)] = value as unknown as UiHint;
+      }
+    }
+
+    return { schema: channelSchema, hints };
+  }, [openclawSchema]);
 
   // Handle DingTalk OpenClaw config change
   const dtOpenClawConfig = config.dingtalk;
@@ -251,13 +292,7 @@ const IMSettings: React.FC = () => {
   const [discordAllowedUserIdInput, setDiscordAllowedUserIdInput] = useState('');
   const [discordServerAllowIdInput, setDiscordServerAllowIdInput] = useState('');
 
-  // Handle NIM config change
-  const handleNimChange = (
-    field: 'appKey' | 'account' | 'token' | 'accountWhitelist' | 'teamPolicy' | 'teamAllowlist' | 'qchatEnabled' | 'qchatServerIds',
-    value: string | boolean
-  ) => {
-    dispatch(setNimConfig({ [field]: value }));
-  };
+
 
   // Handle Xiaomifeng config change
   const handleXiaomifengChange = (field: 'clientId' | 'secret', value: string) => {
@@ -315,8 +350,6 @@ const IMSettings: React.FC = () => {
     }
   };
 
-  // Save config on blur — also auto-triggers NIM connectivity test when
-  // the NIM toggle is ON and credential fields have changed.
   const handleSaveConfig = async () => {
     if (!configLoaded) return;
 
@@ -351,35 +384,9 @@ const IMSettings: React.FC = () => {
     }
 
     await imService.updateConfig({ [activePlatform]: config[activePlatform] });
-
-    // Detect NIM credential changes while the gateway is enabled (only for NIM platform)
-    if (activePlatform === 'nim') {
-      const prev = savedNimConfigRef.current;
-      const cur = config.nim;
-      const nimCredentialsChanged =
-        cur.appKey !== prev.appKey ||
-        cur.account !== prev.account ||
-        cur.token !== prev.token;
-
-      // Update the snapshot regardless
-      savedNimConfigRef.current = { appKey: cur.appKey, account: cur.account, token: cur.token };
-
-      if (nimCredentialsChanged && cur.enabled && cur.appKey && cur.account && cur.token) {
-        // Auto-run connectivity test: stop → start → test (silently, no modal)
-        await imService.stopGateway('nim');
-        await imService.startGateway('nim');
-        await runConnectivityTest('nim', { nim: cur } as Partial<IMGatewayConfig>);
-      }
-    }
   };
 
-  // Save NIM config with explicit updated fields (for select/toggle that need immediate save)
-  // This avoids the race condition where Redux state hasn't updated yet
-  const saveNimConfigWithUpdate = async (updates: Partial<typeof config.nim>) => {
-    if (!configLoaded) return;
-    const updatedNimConfig = { ...config.nim, ...updates };
-    await imService.updateConfig({ nim: updatedNimConfig });
-  };
+
 
   const getCheckTitle = (code: IMConnectivityCheck['code']): string => {
     return i18nService.t(`imConnectivityCheckTitle_${code}`);
@@ -500,7 +507,17 @@ const IMSettings: React.FC = () => {
         return;
       }
 
-      // Non-OpenClaw platforms (nim, xiaomifeng): use startGateway/stopGateway
+      if (platform === 'nim') {
+        const newEnabled = !config.nim.enabled;
+        const success = await imService.updateConfig({ nim: { ...config.nim, enabled: newEnabled } });
+        if (success) {
+          dispatch(setNimConfig({ enabled: newEnabled }));
+          if (newEnabled) dispatch(clearError());
+          await imService.loadStatus();
+        }
+        return;
+      }
+
       const isEnabled = config[platform].enabled;
       const newEnabled = !isEnabled;
 
@@ -682,14 +699,9 @@ const IMSettings: React.FC = () => {
     // The backend's testNimConnectivity already manages the SDK lifecycle
     // (stop main → probe with temp instance → restart main) under a mutex,
     // so doing stop/start here would cause a race condition and potential crash.
-    if (isEnabled && platform !== 'nim') {
-      // For non-OpenClaw platforms (xiaomifeng), restart gateway to pick up latest credentials.
-      // OpenClaw platforms (dingtalk, discord, etc.) are already restarted by im:config:set handler
-      // via syncOpenClawConfig({ restartGatewayIfRunning: true }), so stop/start is redundant.
-      if (platform === 'xiaomifeng') {
-        await imService.stopGateway(platform);
-        await imService.startGateway(platform);
-      }
+    if (isEnabled && platform === 'xiaomifeng') {
+      await imService.stopGateway(platform);
+      await imService.startGateway(platform);
     }
     // When the gateway is OFF we skip stop/start entirely.
     // The main process testGateway → runAuthProbe will spawn an isolated
@@ -2489,7 +2501,6 @@ const IMSettings: React.FC = () => {
         {/* NIM (NetEase IM) Settings */}
         {activePlatform === 'nim' && (
           <div className="space-y-3">
-            {/* How to get NIM credentials */}
             <PlatformGuide
               title={i18nService.t('nimCredentialsGuide')}
               steps={[
@@ -2500,230 +2511,55 @@ const IMSettings: React.FC = () => {
               ]}
             />
 
-            {/* App Key */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                App Key
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={config.nim.appKey}
-                  onChange={(e) => handleNimChange('appKey', e.target.value)}
-                  onBlur={handleSaveConfig}
-                  className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 pr-8 text-sm transition-colors"
-                  placeholder="your_app_key"
-                />
-                {config.nim.appKey && (
-                  <div className="absolute right-2 inset-y-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => { handleNimChange('appKey', ''); void imService.updateConfig({ nim: { ...config.nim, appKey: '' } }); }}
-                      className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
-                      title={i18nService.t('clear') || 'Clear'}
-                    >
-                      <XCircleIconSolid className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                {i18nService.t('nimAppKeyHint') || '从云信控制台应用信息中获取'}
-              </p>
-            </div>
-
-            {/* Account */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                Account (accid)
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={config.nim.account}
-                  onChange={(e) => handleNimChange('account', e.target.value)}
-                  onBlur={handleSaveConfig}
-                  className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 pr-8 text-sm transition-colors"
-                  placeholder={i18nService.t('nimAccountPlaceholder') || 'bot_account_id'}
-                />
-                {config.nim.account && (
-                  <div className="absolute right-2 inset-y-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => { handleNimChange('account', ''); void imService.updateConfig({ nim: { ...config.nim, account: '' } }); }}
-                      className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
-                      title={i18nService.t('clear') || 'Clear'}
-                    >
-                      <XCircleIconSolid className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                {i18nService.t('nimAccountHint') || '在云信控制台"账号管理"中创建的 IM 账号 ID'}
-              </p>
-            </div>
-
-            {/* Token */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                Token
-              </label>
-              <div className="relative">
-                <input
-                  type={showSecrets['nim.token'] ? 'text' : 'password'}
-                  value={config.nim.token}
-                  onChange={(e) => handleNimChange('token', e.target.value)}
-                  onBlur={handleSaveConfig}
-                  className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 pr-16 text-sm transition-colors"
-                  placeholder="••••••••••••"
-                />
-                <div className="absolute right-2 inset-y-0 flex items-center gap-1">
-                  {config.nim.token && (
-                    <button
-                      type="button"
-                      onClick={() => { handleNimChange('token', ''); void imService.updateConfig({ nim: { ...config.nim, token: '' } }); }}
-                      className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
-                      title={i18nService.t('clear') || 'Clear'}
-                    >
-                      <XCircleIconSolid className="h-4 w-4" />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowSecrets(prev => ({ ...prev, 'nim.token': !prev['nim.token'] }))}
-                    className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
-                    title={showSecrets['nim.token'] ? (i18nService.t('hide') || 'Hide') : (i18nService.t('show') || 'Show')}
-                  >
-                    {showSecrets['nim.token'] ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
-                  </button>
+            {nimSchemaData ? (
+              <SchemaForm
+                schema={nimSchemaData.schema}
+                hints={nimSchemaData.hints}
+                value={config.nim as unknown as Record<string, unknown>}
+                onChange={(path, value) => {
+                  const updated = deepSet({ ...config.nim } as unknown as Record<string, unknown>, path, value);
+                  dispatch(setNimConfig(updated as any));
+                }}
+                onBlur={handleSaveConfig}
+                showSecrets={showSecrets}
+                onToggleSecret={(path) => setShowSecrets(prev => ({ ...prev, [path]: !prev[path] }))}
+              />
+            ) : (
+              /* Fallback: minimal credential inputs when schema not yet loaded */
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">App Key</label>
+                  <input
+                    type="text"
+                    value={config.nim.appKey}
+                    onChange={(e) => dispatch(setNimConfig({ appKey: e.target.value }))}
+                    onBlur={handleSaveConfig}
+                    className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
+                    placeholder="your_app_key"
+                  />
                 </div>
-              </div>
-              <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                {i18nService.t('nimTokenHint') || '为该账号生成的访问凭证（建议设置为长期有效）'}
-              </p>
-            </div>
-
-            {/* Account Whitelist */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                {i18nService.t('nimAccountWhitelist') || '白名单账号'}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={config.nim.accountWhitelist}
-                  onChange={(e) => handleNimChange('accountWhitelist', e.target.value)}
-                  onBlur={handleSaveConfig}
-                  className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 pr-8 text-sm transition-colors"
-                  placeholder="account1,account2"
-                />
-                {config.nim.accountWhitelist && (
-                  <div className="absolute right-2 inset-y-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => { handleNimChange('accountWhitelist', ''); void imService.updateConfig({ nim: { ...config.nim, accountWhitelist: '' } }); }}
-                      className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
-                      title={i18nService.t('clear') || 'Clear'}
-                    >
-                      <XCircleIconSolid className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                {i18nService.t('nimAccountWhitelistHint') || '填写允许与机器人对话的云信账号，多个账号用逗号分隔。留空则不限制，响应所有账号的消息。'}
-              </p>
-            </div>
-
-            {/* Team Policy (群消息策略) */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                {i18nService.t('nimTeamPolicy') || '群消息策略'}
-              </label>
-              <select
-                value={config.nim.teamPolicy || 'disabled'}
-                onChange={(e) => {
-                  const newValue = e.target.value as 'disabled' | 'open' | 'allowlist';
-                  handleNimChange('teamPolicy', newValue);
-                  saveNimConfigWithUpdate({ teamPolicy: newValue });
-                }}
-                className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
-              >
-                <option value="disabled">{i18nService.t('nimTeamPolicyDisabled') || '禁用 - 不响应群消息'}</option>
-                <option value="open">{i18nService.t('nimTeamPolicyOpen') || '开放 - 响应所有群的@消息'}</option>
-                <option value="allowlist">{i18nService.t('nimTeamPolicyAllowlist') || '白名单 - 仅响应指定群的@消息'}</option>
-              </select>
-              <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                {i18nService.t('nimTeamPolicyHint') || '群消息仅响应@机器人的消息'}
-              </p>
-            </div>
-
-            {/* Team Allowlist - only show when policy is 'allowlist' */}
-            {config.nim.teamPolicy === 'allowlist' && (
-              <div className="space-y-1.5">
-                <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                  {i18nService.t('nimTeamAllowlist') || '群白名单'}
-                </label>
-                <input
-                  type="text"
-                  value={config.nim.teamAllowlist || ''}
-                  onChange={(e) => handleNimChange('teamAllowlist', e.target.value)}
-                  onBlur={handleSaveConfig}
-                  className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
-                  placeholder="team_id_1,team_id_2"
-                />
-                <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                  {i18nService.t('nimTeamAllowlistHint') || '填写允许响应的群ID，多个用逗号分隔'}
-                </p>
-              </div>
-            )}
-
-            {/* QChat Enable Toggle */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                  {i18nService.t('nimQChatEnabled') || '启用圈组 (QChat)'}
-                </label>
-                <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary mt-0.5">
-                  {i18nService.t('nimQChatEnabledHint') || '订阅圈组消息，仅响应@机器人的消息'}
-                </p>
-              </div>
-              <div
-                className={`w-10 h-5 rounded-full flex items-center transition-colors cursor-pointer ${
-                  config.nim.qchatEnabled ? 'bg-green-500' : 'dark:bg-claude-darkBorder bg-claude-border'
-                }`}
-                onClick={() => {
-                  const newValue = !config.nim.qchatEnabled;
-                  handleNimChange('qchatEnabled', newValue);
-                  saveNimConfigWithUpdate({ qchatEnabled: newValue });
-                }}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform ${
-                    config.nim.qchatEnabled ? 'translate-x-5' : 'translate-x-0.5'
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* QChat Server IDs - only show when QChat is enabled */}
-            {config.nim.qchatEnabled && (
-              <div className="space-y-1.5">
-                <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
-                  {i18nService.t('nimQChatServerIds') || '圈组服务器 ID'}
-                </label>
-                <input
-                  type="text"
-                  value={config.nim.qchatServerIds || ''}
-                  onChange={(e) => handleNimChange('qchatServerIds', e.target.value)}
-                  onBlur={handleSaveConfig}
-                  className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
-                  placeholder={i18nService.t('nimQChatServerIdsPlaceholder') || '留空自动发现所有已加入的服务器'}
-                />
-                <p className="text-xs text-claude-textSecondary dark:text-claude-darkTextSecondary">
-                  {i18nService.t('nimQChatServerIdsHint') || '指定要订阅的服务器 ID，多个用逗号分隔。留空则自动订阅所有已加入的服务器。'}
-                </p>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">Account</label>
+                  <input
+                    type="text"
+                    value={config.nim.account}
+                    onChange={(e) => dispatch(setNimConfig({ account: e.target.value }))}
+                    onBlur={handleSaveConfig}
+                    className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
+                    placeholder="bot_account_id"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">Token</label>
+                  <input
+                    type="password"
+                    value={config.nim.token}
+                    onChange={(e) => dispatch(setNimConfig({ token: e.target.value }))}
+                    onBlur={handleSaveConfig}
+                    className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
+                    placeholder="••••••••••••"
+                  />
+                </div>
               </div>
             )}
 
@@ -2731,17 +2567,15 @@ const IMSettings: React.FC = () => {
               {renderConnectivityTestButton('nim')}
             </div>
 
-            {/* Bot account display */}
             {status.nim.botAccount && (
               <div className="text-xs text-green-600 dark:text-green-400 bg-green-500/10 px-3 py-2 rounded-lg">
                 Account: {status.nim.botAccount}
               </div>
             )}
 
-            {/* Error display */}
             {status.nim.lastError && (
               <div className="text-xs text-red-500 bg-red-500/10 px-3 py-2 rounded-lg">
-                {status.nim.lastError}
+                {translateIMError(status.nim.lastError)}
               </div>
             )}
           </div>

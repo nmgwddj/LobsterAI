@@ -243,6 +243,21 @@ class IMService {
   async rejectPairingRequest(platform: string, code: string) {
     return window.electron.im.rejectPairingRequest(platform, code);
   }
+
+  /**
+   * Fetch the OpenClaw config schema (JSON Schema + uiHints) from the gateway.
+   */
+  async getOpenClawConfigSchema(): Promise<{ schema: Record<string, unknown>; uiHints: Record<string, Record<string, unknown>> } | null> {
+    try {
+      const result = await window.electron.im.getOpenClawConfigSchema();
+      if (result.success && result.result) {
+        return result.result;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const imService = new IMService();
