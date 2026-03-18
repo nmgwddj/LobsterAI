@@ -225,7 +225,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...dtOpenClawConfig, ...override }
       : dtOpenClawConfig;
-    await imService.updateConfig({ dingtalk: configToSave });
+    await imService.persistConfig({ dingtalk: configToSave });
   };
   const [dingtalkAllowedUserIdInput, setDingtalkAllowedUserIdInput] = useState('');
 
@@ -239,7 +239,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...fsOpenClawConfig, ...override }
       : fsOpenClawConfig;
-    await imService.updateConfig({ feishu: configToSave });
+    await imService.persistConfig({ feishu: configToSave });
   };
 
   // State for Feishu allow-from inputs
@@ -269,7 +269,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...tgOpenClawConfig, ...override }
       : tgOpenClawConfig;
-    await imService.updateConfig({ telegram: configToSave });
+    await imService.persistConfig({ telegram: configToSave });
   };
 
   // Handle QQ OpenClaw config change
@@ -282,7 +282,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...qqOpenClawConfig, ...override }
       : qqOpenClawConfig;
-    await imService.updateConfig({ qq: configToSave });
+    await imService.persistConfig({ qq: configToSave });
   };
 
   // Handle Discord OpenClaw config change
@@ -295,7 +295,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...dcOpenClawConfig, ...override }
       : dcOpenClawConfig;
-    await imService.updateConfig({ discord: configToSave });
+    await imService.persistConfig({ discord: configToSave });
   };
 
   // State for Discord allow-from inputs
@@ -321,7 +321,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...wecomOpenClawConfig, ...override }
       : wecomOpenClawConfig;
-    await imService.updateConfig({ wecom: configToSave });
+    await imService.persistConfig({ wecom: configToSave });
   };
 
   // Handle POPO OpenClaw config change
@@ -334,7 +334,7 @@ const IMSettings: React.FC = () => {
     const configToSave = override
       ? { ...popoConfig, ...override }
       : popoConfig;
-    await imService.updateConfig({ popo: configToSave });
+    await imService.persistConfig({ popo: configToSave });
   };
 
   const handleWecomQuickSetup = async () => {
@@ -375,46 +375,47 @@ const IMSettings: React.FC = () => {
     }
   };
 
+
   const handleSaveConfig = async () => {
     if (!configLoaded) return;
 
     // For Telegram, save telegram config directly
     if (activePlatform === 'telegram') {
-      await imService.updateConfig({ telegram: tgOpenClawConfig });
+      await imService.persistConfig({ telegram: tgOpenClawConfig });
       return;
     }
 
     // For Discord, save discord config directly
     if (activePlatform === 'discord') {
-      await imService.updateConfig({ discord: dcOpenClawConfig });
+      await imService.persistConfig({ discord: dcOpenClawConfig });
       return;
     }
 
     // For Feishu, save feishu config directly
     if (activePlatform === 'feishu') {
-      await imService.updateConfig({ feishu: fsOpenClawConfig });
+      await imService.persistConfig({ feishu: fsOpenClawConfig });
       return;
     }
 
     // For QQ, save qq config directly (OpenClaw mode)
     if (activePlatform === 'qq') {
-      await imService.updateConfig({ qq: qqOpenClawConfig });
+      await imService.persistConfig({ qq: qqOpenClawConfig });
       return;
     }
 
     // For WeCom, save wecom config directly (OpenClaw mode)
     if (activePlatform === 'wecom') {
-      await imService.updateConfig({ wecom: wecomOpenClawConfig });
+      await imService.persistConfig({ wecom: wecomOpenClawConfig });
       return;
     }
 
     // For POPO, save popo config directly (OpenClaw mode)
     if (activePlatform === 'popo') {
-      await imService.updateConfig({ popo: popoConfig });
+      await imService.persistConfig({ popo: popoConfig });
       return;
     }
 
-    await imService.updateConfig({ [activePlatform]: config[activePlatform] });
+    await imService.persistConfig({ [activePlatform]: config[activePlatform] });
   };
 
 
@@ -675,7 +676,7 @@ const IMSettings: React.FC = () => {
 
     // For Telegram, persist telegram config and test
     if (platform === 'telegram') {
-      await imService.updateConfig({ telegram: tgOpenClawConfig });
+      await imService.persistConfig({ telegram: tgOpenClawConfig });
       const result = await runConnectivityTest(platform, {
         telegram: tgOpenClawConfig,
       } as Partial<IMGatewayConfig>);
@@ -691,7 +692,7 @@ const IMSettings: React.FC = () => {
 
     // For QQ, persist qq config and test (OpenClaw mode)
     if (platform === 'qq') {
-      await imService.updateConfig({ qq: qqOpenClawConfig });
+      await imService.persistConfig({ qq: qqOpenClawConfig });
       const result = await runConnectivityTest(platform, {
         qq: qqOpenClawConfig,
       } as Partial<IMGatewayConfig>);
@@ -706,7 +707,7 @@ const IMSettings: React.FC = () => {
 
     // For WeCom, persist wecom config and test (OpenClaw mode)
     if (platform === 'wecom') {
-      await imService.updateConfig({ wecom: wecomOpenClawConfig });
+      await imService.persistConfig({ wecom: wecomOpenClawConfig });
       const result = await runConnectivityTest(platform, {
         wecom: wecomOpenClawConfig,
       } as Partial<IMGatewayConfig>);
@@ -721,7 +722,7 @@ const IMSettings: React.FC = () => {
 
     // For Feishu, persist feishu config and test (OpenClaw mode)
     if (platform === 'feishu') {
-      await imService.updateConfig({ feishu: fsOpenClawConfig });
+      await imService.persistConfig({ feishu: fsOpenClawConfig });
       const result = await runConnectivityTest(platform, {
         feishu: fsOpenClawConfig,
       } as Partial<IMGatewayConfig>);
@@ -735,7 +736,7 @@ const IMSettings: React.FC = () => {
     }
 
     // 1. Persist latest config to backend (without changing enabled state)
-    await imService.updateConfig({
+    await imService.persistConfig({
       [platform]: config[platform],
     } as Partial<IMGatewayConfig>);
 
@@ -997,7 +998,7 @@ const IMSettings: React.FC = () => {
                   <div className="absolute right-2 inset-y-0 flex items-center">
                     <button
                       type="button"
-                      onClick={() => { handleDingTalkOpenClawChange({ clientId: '' }); void imService.updateConfig({ dingtalk: { ...dtOpenClawConfig, clientId: '' } }); }}
+                      onClick={() => { handleDingTalkOpenClawChange({ clientId: '' }); void imService.persistConfig({ dingtalk: { ...dtOpenClawConfig, clientId: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1026,7 +1027,7 @@ const IMSettings: React.FC = () => {
                   {dtOpenClawConfig.clientSecret && (
                     <button
                       type="button"
-                      onClick={() => { handleDingTalkOpenClawChange({ clientSecret: '' }); void imService.updateConfig({ dingtalk: { ...dtOpenClawConfig, clientSecret: '' } }); }}
+                      onClick={() => { handleDingTalkOpenClawChange({ clientSecret: '' }); void imService.persistConfig({ dingtalk: { ...dtOpenClawConfig, clientSecret: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1092,7 +1093,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...dtOpenClawConfig.allowFrom, id];
                             handleDingTalkOpenClawChange({ allowFrom: newIds });
                             setDingtalkAllowedUserIdInput('');
-                            void imService.updateConfig({ dingtalk: { ...dtOpenClawConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ dingtalk: { ...dtOpenClawConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -1107,7 +1108,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...dtOpenClawConfig.allowFrom, id];
                           handleDingTalkOpenClawChange({ allowFrom: newIds });
                           setDingtalkAllowedUserIdInput('');
-                          void imService.updateConfig({ dingtalk: { ...dtOpenClawConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ dingtalk: { ...dtOpenClawConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -1128,7 +1129,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = dtOpenClawConfig.allowFrom.filter((x) => x !== id);
                               handleDingTalkOpenClawChange({ allowFrom: newIds });
-                              void imService.updateConfig({ dingtalk: { ...dtOpenClawConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ dingtalk: { ...dtOpenClawConfig, allowFrom: newIds } });
                             }}
                             className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 transition-colors"
                           >
@@ -1312,7 +1313,7 @@ const IMSettings: React.FC = () => {
                   <div className="absolute right-2 inset-y-0 flex items-center">
                     <button
                       type="button"
-                      onClick={() => { handleFeishuOpenClawChange({ appId: '' }); void imService.updateConfig({ feishu: { ...fsOpenClawConfig, appId: '' } }); }}
+                      onClick={() => { handleFeishuOpenClawChange({ appId: '' }); void imService.persistConfig({ feishu: { ...fsOpenClawConfig, appId: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1341,7 +1342,7 @@ const IMSettings: React.FC = () => {
                   {fsOpenClawConfig.appSecret && (
                     <button
                       type="button"
-                      onClick={() => { handleFeishuOpenClawChange({ appSecret: '' }); void imService.updateConfig({ feishu: { ...fsOpenClawConfig, appSecret: '' } }); }}
+                      onClick={() => { handleFeishuOpenClawChange({ appSecret: '' }); void imService.persistConfig({ feishu: { ...fsOpenClawConfig, appSecret: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1427,7 +1428,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...fsOpenClawConfig.allowFrom, id];
                             handleFeishuOpenClawChange({ allowFrom: newIds });
                             setFeishuAllowedUserIdInput('');
-                            void imService.updateConfig({ feishu: { ...fsOpenClawConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ feishu: { ...fsOpenClawConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -1442,7 +1443,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...fsOpenClawConfig.allowFrom, id];
                           handleFeishuOpenClawChange({ allowFrom: newIds });
                           setFeishuAllowedUserIdInput('');
-                          void imService.updateConfig({ feishu: { ...fsOpenClawConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ feishu: { ...fsOpenClawConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -1463,7 +1464,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = fsOpenClawConfig.allowFrom.filter((uid) => uid !== id);
                               handleFeishuOpenClawChange({ allowFrom: newIds });
-                              void imService.updateConfig({ feishu: { ...fsOpenClawConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ feishu: { ...fsOpenClawConfig, allowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
@@ -1513,7 +1514,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...fsOpenClawConfig.groupAllowFrom, id];
                             handleFeishuOpenClawChange({ groupAllowFrom: newIds });
                             setFeishuGroupAllowIdInput('');
-                            void imService.updateConfig({ feishu: { ...fsOpenClawConfig, groupAllowFrom: newIds } });
+                            void imService.persistConfig({ feishu: { ...fsOpenClawConfig, groupAllowFrom: newIds } });
                           }
                         }
                       }}
@@ -1528,7 +1529,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...fsOpenClawConfig.groupAllowFrom, id];
                           handleFeishuOpenClawChange({ groupAllowFrom: newIds });
                           setFeishuGroupAllowIdInput('');
-                          void imService.updateConfig({ feishu: { ...fsOpenClawConfig, groupAllowFrom: newIds } });
+                          void imService.persistConfig({ feishu: { ...fsOpenClawConfig, groupAllowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -1549,7 +1550,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = fsOpenClawConfig.groupAllowFrom.filter((gid) => gid !== id);
                               handleFeishuOpenClawChange({ groupAllowFrom: newIds });
-                              void imService.updateConfig({ feishu: { ...fsOpenClawConfig, groupAllowFrom: newIds } });
+                              void imService.persistConfig({ feishu: { ...fsOpenClawConfig, groupAllowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
@@ -1658,7 +1659,7 @@ const IMSettings: React.FC = () => {
                   <div className="absolute right-2 inset-y-0 flex items-center">
                     <button
                       type="button"
-                      onClick={() => { handleQQOpenClawChange({ appId: '' }); void imService.updateConfig({ qq: { ...qqOpenClawConfig, appId: '' } }); }}
+                      onClick={() => { handleQQOpenClawChange({ appId: '' }); void imService.persistConfig({ qq: { ...qqOpenClawConfig, appId: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1687,7 +1688,7 @@ const IMSettings: React.FC = () => {
                   {qqOpenClawConfig.appSecret && (
                     <button
                       type="button"
-                      onClick={() => { handleQQOpenClawChange({ appSecret: '' }); void imService.updateConfig({ qq: { ...qqOpenClawConfig, appSecret: '' } }); }}
+                      onClick={() => { handleQQOpenClawChange({ appSecret: '' }); void imService.persistConfig({ qq: { ...qqOpenClawConfig, appSecret: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1756,7 +1757,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...qqOpenClawConfig.allowFrom, id];
                             handleQQOpenClawChange({ allowFrom: newIds });
                             setAllowedUserIdInput('');
-                            void imService.updateConfig({ qq: { ...qqOpenClawConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ qq: { ...qqOpenClawConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -1771,7 +1772,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...qqOpenClawConfig.allowFrom, id];
                           handleQQOpenClawChange({ allowFrom: newIds });
                           setAllowedUserIdInput('');
-                          void imService.updateConfig({ qq: { ...qqOpenClawConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ qq: { ...qqOpenClawConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -1792,7 +1793,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = qqOpenClawConfig.allowFrom.filter((uid) => uid !== id);
                               handleQQOpenClawChange({ allowFrom: newIds });
-                              void imService.updateConfig({ qq: { ...qqOpenClawConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ qq: { ...qqOpenClawConfig, allowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
@@ -1925,7 +1926,7 @@ const IMSettings: React.FC = () => {
                   {tgOpenClawConfig.botToken && (
                     <button
                       type="button"
-                      onClick={() => { handleTelegramOpenClawChange({ botToken: '' }); void imService.updateConfig({ telegram: { ...tgOpenClawConfig, botToken: '' } }); }}
+                      onClick={() => { handleTelegramOpenClawChange({ botToken: '' }); void imService.persistConfig({ telegram: { ...tgOpenClawConfig, botToken: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -1995,7 +1996,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...tgOpenClawConfig.allowFrom, id];
                             handleTelegramOpenClawChange({ allowFrom: newIds });
                             setAllowedUserIdInput('');
-                            void imService.updateConfig({ telegram: { ...tgOpenClawConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ telegram: { ...tgOpenClawConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -2010,7 +2011,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...tgOpenClawConfig.allowFrom, id];
                           handleTelegramOpenClawChange({ allowFrom: newIds });
                           setAllowedUserIdInput('');
-                          void imService.updateConfig({ telegram: { ...tgOpenClawConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ telegram: { ...tgOpenClawConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -2031,7 +2032,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = tgOpenClawConfig.allowFrom.filter((uid) => uid !== id);
                               handleTelegramOpenClawChange({ allowFrom: newIds });
-                              void imService.updateConfig({ telegram: { ...tgOpenClawConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ telegram: { ...tgOpenClawConfig, allowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
@@ -2245,7 +2246,7 @@ const IMSettings: React.FC = () => {
                   {dcOpenClawConfig.botToken && (
                     <button
                       type="button"
-                      onClick={() => { handleDiscordOpenClawChange({ botToken: '' }); void imService.updateConfig({ discord: { ...dcOpenClawConfig, botToken: '' } }); }}
+                      onClick={() => { handleDiscordOpenClawChange({ botToken: '' }); void imService.persistConfig({ discord: { ...dcOpenClawConfig, botToken: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -2315,7 +2316,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...dcOpenClawConfig.allowFrom, id];
                             handleDiscordOpenClawChange({ allowFrom: newIds });
                             setDiscordAllowedUserIdInput('');
-                            void imService.updateConfig({ discord: { ...dcOpenClawConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ discord: { ...dcOpenClawConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -2330,7 +2331,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...dcOpenClawConfig.allowFrom, id];
                           handleDiscordOpenClawChange({ allowFrom: newIds });
                           setDiscordAllowedUserIdInput('');
-                          void imService.updateConfig({ discord: { ...dcOpenClawConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ discord: { ...dcOpenClawConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -2351,7 +2352,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = dcOpenClawConfig.allowFrom.filter((uid) => uid !== id);
                               handleDiscordOpenClawChange({ allowFrom: newIds });
-                              void imService.updateConfig({ discord: { ...dcOpenClawConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ discord: { ...dcOpenClawConfig, allowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 transition-colors"
                           >
@@ -2437,7 +2438,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...dcOpenClawConfig.groupAllowFrom, id];
                             handleDiscordOpenClawChange({ groupAllowFrom: newIds });
                             setDiscordServerAllowIdInput('');
-                            void imService.updateConfig({ discord: { ...dcOpenClawConfig, groupAllowFrom: newIds } });
+                            void imService.persistConfig({ discord: { ...dcOpenClawConfig, groupAllowFrom: newIds } });
                           }
                         }
                       }}
@@ -2452,7 +2453,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...dcOpenClawConfig.groupAllowFrom, id];
                           handleDiscordOpenClawChange({ groupAllowFrom: newIds });
                           setDiscordServerAllowIdInput('');
-                          void imService.updateConfig({ discord: { ...dcOpenClawConfig, groupAllowFrom: newIds } });
+                          void imService.persistConfig({ discord: { ...dcOpenClawConfig, groupAllowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -2473,7 +2474,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = dcOpenClawConfig.groupAllowFrom.filter((gid) => gid !== id);
                               handleDiscordOpenClawChange({ groupAllowFrom: newIds });
-                              void imService.updateConfig({ discord: { ...dcOpenClawConfig, groupAllowFrom: newIds } });
+                              void imService.persistConfig({ discord: { ...dcOpenClawConfig, groupAllowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 transition-colors"
                           >
@@ -2567,6 +2568,7 @@ const IMSettings: React.FC = () => {
                   const updated = deepSet({ ...config.nim } as unknown as Record<string, unknown>, path, value);
                   dispatch(setNimConfig(updated as any));
                 }}
+                }}
                 onBlur={handleSaveConfig}
                 showSecrets={showSecrets}
                 onToggleSecret={(path) => setShowSecrets(prev => ({ ...prev, [path]: !prev[path] }))}
@@ -2649,7 +2651,7 @@ const IMSettings: React.FC = () => {
                   <div className="absolute right-2 inset-y-0 flex items-center">
                     <button
                       type="button"
-                      onClick={() => { handleXiaomifengChange('clientId', ''); void imService.updateConfig({ xiaomifeng: { ...config.xiaomifeng, clientId: '' } }); }}
+                      onClick={() => { handleXiaomifengChange('clientId', ''); void imService.persistConfig({ xiaomifeng: { ...config.xiaomifeng, clientId: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -2678,7 +2680,7 @@ const IMSettings: React.FC = () => {
                   {config.xiaomifeng.secret && (
                     <button
                       type="button"
-                      onClick={() => { handleXiaomifengChange('secret', ''); void imService.updateConfig({ xiaomifeng: { ...config.xiaomifeng, secret: '' } }); }}
+                      onClick={() => { handleXiaomifengChange('secret', ''); void imService.persistConfig({ xiaomifeng: { ...config.xiaomifeng, secret: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -2785,7 +2787,7 @@ const IMSettings: React.FC = () => {
                   <div className="absolute right-2 inset-y-0 flex items-center">
                     <button
                       type="button"
-                      onClick={() => { handleWecomOpenClawChange({ botId: '' }); void imService.updateConfig({ wecom: { ...wecomOpenClawConfig, botId: '' } }); }}
+                      onClick={() => { handleWecomOpenClawChange({ botId: '' }); void imService.persistConfig({ wecom: { ...wecomOpenClawConfig, botId: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -2814,7 +2816,7 @@ const IMSettings: React.FC = () => {
                   {wecomOpenClawConfig.secret && (
                     <button
                       type="button"
-                      onClick={() => { handleWecomOpenClawChange({ secret: '' }); void imService.updateConfig({ wecom: { ...wecomOpenClawConfig, secret: '' } }); }}
+                      onClick={() => { handleWecomOpenClawChange({ secret: '' }); void imService.persistConfig({ wecom: { ...wecomOpenClawConfig, secret: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >
@@ -2884,7 +2886,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...wecomOpenClawConfig.allowFrom, id];
                             handleWecomOpenClawChange({ allowFrom: newIds });
                             setAllowedUserIdInput('');
-                            void imService.updateConfig({ wecom: { ...wecomOpenClawConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ wecom: { ...wecomOpenClawConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -2899,7 +2901,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...wecomOpenClawConfig.allowFrom, id];
                           handleWecomOpenClawChange({ allowFrom: newIds });
                           setAllowedUserIdInput('');
-                          void imService.updateConfig({ wecom: { ...wecomOpenClawConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ wecom: { ...wecomOpenClawConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -2920,7 +2922,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = wecomOpenClawConfig.allowFrom.filter((uid) => uid !== id);
                               handleWecomOpenClawChange({ allowFrom: newIds });
-                              void imService.updateConfig({ wecom: { ...wecomOpenClawConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ wecom: { ...wecomOpenClawConfig, allowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
@@ -3248,7 +3250,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...popoConfig.allowFrom, id];
                             handlePopoChange({ allowFrom: newIds });
                             setPopoAllowedUserIdInput('');
-                            void imService.updateConfig({ popo: { ...popoConfig, allowFrom: newIds } });
+                            void imService.persistConfig({ popo: { ...popoConfig, allowFrom: newIds } });
                           }
                         }
                       }}
@@ -3263,7 +3265,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...popoConfig.allowFrom, id];
                           handlePopoChange({ allowFrom: newIds });
                           setPopoAllowedUserIdInput('');
-                          void imService.updateConfig({ popo: { ...popoConfig, allowFrom: newIds } });
+                          void imService.persistConfig({ popo: { ...popoConfig, allowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -3284,7 +3286,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = popoConfig.allowFrom.filter((uid) => uid !== id);
                               handlePopoChange({ allowFrom: newIds });
-                              void imService.updateConfig({ popo: { ...popoConfig, allowFrom: newIds } });
+                              void imService.persistConfig({ popo: { ...popoConfig, allowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
@@ -3334,7 +3336,7 @@ const IMSettings: React.FC = () => {
                             const newIds = [...popoConfig.groupAllowFrom, id];
                             handlePopoChange({ groupAllowFrom: newIds });
                             setPopoGroupAllowIdInput('');
-                            void imService.updateConfig({ popo: { ...popoConfig, groupAllowFrom: newIds } });
+                            void imService.persistConfig({ popo: { ...popoConfig, groupAllowFrom: newIds } });
                           }
                         }
                       }}
@@ -3349,7 +3351,7 @@ const IMSettings: React.FC = () => {
                           const newIds = [...popoConfig.groupAllowFrom, id];
                           handlePopoChange({ groupAllowFrom: newIds });
                           setPopoGroupAllowIdInput('');
-                          void imService.updateConfig({ popo: { ...popoConfig, groupAllowFrom: newIds } });
+                          void imService.persistConfig({ popo: { ...popoConfig, groupAllowFrom: newIds } });
                         }
                       }}
                       className="px-3 py-2 rounded-lg text-xs font-medium bg-claude-accent/10 text-claude-accent hover:bg-claude-accent/20 transition-colors"
@@ -3370,7 +3372,7 @@ const IMSettings: React.FC = () => {
                             onClick={() => {
                               const newIds = popoConfig.groupAllowFrom.filter((gid) => gid !== id);
                               handlePopoChange({ groupAllowFrom: newIds });
-                              void imService.updateConfig({ popo: { ...popoConfig, groupAllowFrom: newIds } });
+                              void imService.persistConfig({ popo: { ...popoConfig, groupAllowFrom: newIds } });
                             }}
                             className="text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >

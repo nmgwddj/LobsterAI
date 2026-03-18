@@ -357,7 +357,7 @@ export class IMGatewayManager extends EventEmitter {
     return this.imStore;
   }
 
-  setConfig(config: Partial<IMGatewayConfig>): void {
+  setConfig(config: Partial<IMGatewayConfig>, options?: { syncGateway?: boolean }): void {
     const previousConfig = this.imStore.getConfig();
     this.imStore.setConfig(config);
 
@@ -374,8 +374,9 @@ export class IMGatewayManager extends EventEmitter {
     // Feishu now runs via OpenClaw; config sync is handled by IPC handler
 
 
-    // Hot-update Xiaomifeng config: restart if credential fields changed
-    if (config.xiaomifeng && this.xiaomifengGateway) {
+    // Hot-update Xiaomifeng config: restart if credential fields changed.
+    // Only perform hot-restart when syncGateway is explicitly true (i.e. user clicked Save).
+    if (options?.syncGateway && config.xiaomifeng && this.xiaomifengGateway) {
       const oldXmf = previousConfig.xiaomifeng;
       const newXmf = { ...oldXmf, ...config.xiaomifeng };
       const credentialsChanged =
