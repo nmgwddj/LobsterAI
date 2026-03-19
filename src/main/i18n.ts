@@ -26,6 +26,14 @@ const translations: Record<LanguageType, Record<string, string>> = {
 
     // Timeout hint
     taskTimedOut: '[任务超时] 任务因超过最大允许时长而被自动停止。你可以继续对话以从中断处继续。',
+    channelTitleTelegram: '[TG]',
+    channelTitleDiscord: '[Discord]',
+    channelTitleFeishu: '[飞书]',
+    channelTitleDingtalk: '[钉钉]',
+    channelTitleQq: '[QQ]',
+    channelTitleWecom: '[企微]',
+    channelTitlePopo: '[POPO]',
+    channelTitleNim: '[云信]',
   },
   en: {
     // Tray menu
@@ -39,6 +47,14 @@ const translations: Record<LanguageType, Record<string, string>> = {
 
     // Timeout hint
     taskTimedOut: '[Task timed out] The task was automatically stopped because it exceeded the maximum allowed duration. You can continue the conversation to pick up where it left off.',
+    channelTitleTelegram: '[TG]',
+    channelTitleDiscord: '[Discord]',
+    channelTitleFeishu: '[Feishu]',
+    channelTitleDingtalk: '[DingTalk]',
+    channelTitleQq: '[QQ]',
+    channelTitleWecom: '[WeCom]',
+    channelTitlePopo: '[POPO]',
+    channelTitleNim: '[NIM]',
   },
 };
 

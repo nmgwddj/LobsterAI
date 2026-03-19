@@ -63,6 +63,7 @@ export const CHANNEL_PLATFORM_MAP: Record<string, IMPlatform> = {
   telegram: 'telegram',
   discord: 'discord',
   feishu: 'feishu',
+  dingtalk: 'dingtalk',
   'dingtalk-connector': 'dingtalk',
   qqbot: 'qq',
   wecom: 'wecom',
@@ -166,18 +167,22 @@ function extractCronJobId(sessionKey: string): string {
   return idx >= 0 ? sessionKey.slice(idx + 'cron:'.length) : sessionKey;
 }
 
-/** Map from platform (resolved) to title label. */
-const CHANNEL_TITLE_PREFIX: Record<string, string> = {
-  telegram: '[TG]',
-  discord: '[Discord]',
-  feishu: '[飞书]',
-  dingtalk: '[钉钉]',
-  qq: '[QQ]',
-  wecom: '[企微]',
-  'wecom-openclaw-plugin': '[企微]',
-  popo: '[POPO]',
-  nim: '[云信]',
-};
+/** Return the i18n'd title prefix for a given platform. */
+function getChannelTitlePrefix(platform: string): string {
+  const keyMap: Record<string, string> = {
+    telegram: 'channelTitleTelegram',
+    discord: 'channelTitleDiscord',
+    feishu: 'channelTitleFeishu',
+    dingtalk: 'channelTitleDingtalk',
+    qq: 'channelTitleQq',
+    wecom: 'channelTitleWecom',
+    'wecom-openclaw-plugin': 'channelTitleWecom',
+    popo: 'channelTitlePopo',
+    nim: 'channelTitleNim',
+  };
+  const key = keyMap[platform];
+  return key ? t(key) : `[${platform}]`;
+}
 
 export interface ChannelSessionSyncDeps {
   coworkStore: CoworkStore;
@@ -257,7 +262,7 @@ export class OpenClawChannelSessionSync {
     }
 
     // 5. Create new Cowork session
-    const titlePrefix = CHANNEL_TITLE_PREFIX[parsed.platform] || `[${parsed.platform}]`;
+    const titlePrefix = getChannelTitlePrefix(parsed.platform);
     // For conversationIds that look like email addresses (e.g. POPO),
     // use the local part before '@' as the display name.
     const displayId = parsed.conversationId.includes('@')

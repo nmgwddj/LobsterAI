@@ -70,13 +70,13 @@ const CRON_DELIVERY_INFERENCE_NEW = `function inferDeliveryFromSessionKey(agentS
 \tif (parts.length === 0) return null;
 \tconst head = parts[0]?.trim().toLowerCase();
 \tif (!head || head === "main" || head === "subagent" || head === "acp") return null;
-\tif (head === "dingtalk-connector") {
+\tif (head === "dingtalk" || head === "dingtalk-connector") {
 \t\tconst accountId = parts[1]?.trim();
 \t\tconst senderId = parts[2]?.trim();
 \t\tif (accountId && senderId) {
 \t\t\tconst delivery = {
 \t\t\t\tmode: "announce",
-\t\t\t\tchannel: "dingtalk-connector",
+\t\t\t\tchannel: "dingtalk",
 \t\t\t\tto: \`user:\${senderId}\`,
 \t\t\t\taccountId
 \t\t\t};

@@ -1236,13 +1236,6 @@ const getIMGatewayManager = () => {
           return openClawRuntimeAdapter?.getSessionKeysForSession(sessionId) ?? [];
         },
         createScheduledTask: async ({ sessionId, message, request }) => {
-          if (message.platform === 'dingtalk') {
-            await getIMGatewayManager().primeConversationReplyRoute(
-              message.platform,
-              message.conversationId,
-              sessionId,
-            );
-          }
           const task = await getCronJobService().addJob({
             name: request.taskName,
             description: '',
@@ -1257,7 +1250,9 @@ const getIMGatewayManager = () => {
               kind: 'systemEvent',
               text: request.payloadText,
             },
-            delivery: { mode: 'none' },
+            delivery: message.platform === 'dingtalk'
+              ? { mode: 'announce', channel: 'dingtalk', to: `user:${message.senderId}` }
+              : { mode: 'none' },
             agentId: DEFAULT_MANAGED_AGENT_ID,
             sessionKey: buildManagedSessionKey(sessionId, DEFAULT_MANAGED_AGENT_ID),
           });

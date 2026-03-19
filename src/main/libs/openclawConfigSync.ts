@@ -596,7 +596,7 @@ export class OpenClawConfigSync {
               // When a channel is disabled in the UI, its plugin must also be
               // disabled so OpenClaw doesn't load it at all.
               const pluginEnabled = (() => {
-                if (id === 'dingtalk-connector') return !!(dingTalkConfig?.enabled && dingTalkConfig.clientId);
+                if (id === 'dingtalk' || id === 'dingtalk-connector') return !!(dingTalkConfig?.enabled && dingTalkConfig.clientId);
                 if (id === 'feishu-openclaw-plugin') return !!(feishuConfig?.enabled && feishuConfig.appId);
                 if (id === 'qqbot') return !!(qqConfig?.enabled && qqConfig.appId);
                 if (id === 'wecom-openclaw-plugin') return !!(wecomConfig?.enabled && wecomConfig.botId);
@@ -777,8 +777,13 @@ export class OpenClawConfigSync {
         sharedMemoryAcrossConversations: dingTalkConfig.sharedMemoryAcrossConversations ?? false,
         ...(dingTalkConfig.gatewayBaseUrl ? { gatewayBaseUrl: dingTalkConfig.gatewayBaseUrl } : {}),
         ...(gatewayToken ? { gatewayToken } : {}),
+        // Streaming / AI Card config
+        messageType: dingTalkConfig.messageType || 'markdown',
+        ...(dingTalkConfig.cardTemplateId ? { cardTemplateId: dingTalkConfig.cardTemplateId } : {}),
+        ...(dingTalkConfig.cardTemplateKey && dingTalkConfig.cardTemplateKey !== 'content' ? { cardTemplateKey: dingTalkConfig.cardTemplateKey } : {}),
+        ...(dingTalkConfig.cardRealTimeStream ? { cardRealTimeStream: dingTalkConfig.cardRealTimeStream } : {}),
       };
-      managedConfig.channels = { ...(managedConfig.channels as Record<string, unknown> || {}), 'dingtalk-connector': dingtalkChannel };
+      managedConfig.channels = { ...(managedConfig.channels as Record<string, unknown> || {}), 'dingtalk': dingtalkChannel };
     }
 
     // Sync QQ OpenClaw channel config (via qqbot plugin)

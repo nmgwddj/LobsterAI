@@ -18,6 +18,14 @@ export interface DingTalkOpenClawConfig {
   groupSessionScope: 'group' | 'group_sender';
   sharedMemoryAcrossConversations: boolean;
   gatewayBaseUrl: string;
+  /** Reply message type: 'markdown' for plain text, 'card' for AI interactive card with streaming */
+  messageType: 'markdown' | 'card';
+  /** AI card template ID (required when messageType is 'card') */
+  cardTemplateId: string;
+  /** Card template content field key (default: 'content') */
+  cardTemplateKey: string;
+  /** Enable real-time character-level card streaming (smoother but ~2-3x more API calls) */
+  cardRealTimeStream: boolean;
   debug: boolean;
 }
 
@@ -437,6 +445,10 @@ export const DEFAULT_DINGTALK_OPENCLAW_CONFIG: DingTalkOpenClawConfig = {
   sharedMemoryAcrossConversations: false,
   gatewayBaseUrl: '',
   debug: false,
+  messageType: 'markdown',
+  cardTemplateId: '',
+  cardTemplateKey: 'content',
+  cardRealTimeStream: false,
 };
 
 export const DEFAULT_FEISHU_OPENCLAW_CONFIG: FeishuOpenClawConfig = {
