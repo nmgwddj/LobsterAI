@@ -1,0 +1,27 @@
+scripts/apply-openclaw-runtime-hotfixes.cjs
+  1da98c2bd0b2201a 1-80
+src/main/libs/openclawEngineManager.ts
+  1da98c2bd0b2201a 346-354,357
+package.json
+  1da98c2bd0b2201a 84,91-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "ba3f9de15053f6ad67d6de5d849e8ab8d2896689",
+  "prompts": {
+    "1da98c2bd0b2201a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bec531f6-491c-48e2-ad5b-ccb435a05fca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 99,
+      "total_deletions": 8,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    }
+  }
+}
