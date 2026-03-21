@@ -46,6 +46,9 @@ const translations: Record<LanguageType, Record<string, string>> = {
     coworkErrorServerError: '服务端出现错误，请稍后重试。',
     coworkErrorEngineNotReady: 'AI 引擎正在启动中，请稍等几秒后重试。',
     imErrorPrefix: '处理消息时出错',
+
+    // Skill manager errors
+    skillErrNoSkillMd: '来源中未找到 SKILL.md',
   },
   en: {
     // Tray menu
@@ -79,6 +82,9 @@ const translations: Record<LanguageType, Record<string, string>> = {
     coworkErrorServerError: 'Server error occurred. Please try again later.',
     coworkErrorEngineNotReady: 'AI engine is starting up. Please wait a few seconds and try again.',
     imErrorPrefix: 'Error processing message',
+
+    // Skill manager errors
+    skillErrNoSkillMd: 'No SKILL.md found in source',
   },
 };
 
