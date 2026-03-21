@@ -1,0 +1,23 @@
+src/main/libs/openclawEngineManager.ts
+  52ebc134a506ff69 11,424-427
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "9585d6770d97803ab016b89d38efb8aa52f6d905",
+  "prompts": {
+    "52ebc134a506ff69": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bae1892a-c2c3-48a4-bdcc-633962f7af8c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 15,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}
