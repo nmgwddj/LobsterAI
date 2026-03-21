@@ -1,0 +1,74 @@
+src/main/preload.ts
+  36222f03dbf2ae19 265-268
+src/main/main.ts
+  36222f03dbf2ae19 1,570,1679-1708,3993-4002
+docs/superpowers/specs/2026-03-21-prevent-sleep-design.md
+  36222f03dbf2ae19 1-104
+docs/superpowers/plans/2026-03-21-prevent-sleep.md
+  36222f03dbf2ae19 1-280
+src/renderer/services/i18n.ts
+  36222f03dbf2ae19 862-863,1909-1910
+src/renderer/types/electron.d.ts
+  36222f03dbf2ae19 360-362
+src/renderer/components/Settings.tsx
+  36222f03dbf2ae19 386-387,608-615,1929-1976
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "6b29922a4fdfa93544eb64bff47c70d1b58bfcdc",
+  "prompts": {
+    "2b8afb5ad54f8213": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81d51c6c-4e48-4424-a042-4637570b0d14",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 121,
+      "total_deletions": 13,
+      "accepted_lines": 98,
+      "overriden_lines": 0
+    },
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 32,
+      "total_deletions": 31,
+      "accepted_lines": 525,
+      "overriden_lines": 0
+    },
+    "8d888da9bf34b84f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86bf0770-5cc4-4105-a08e-3d2c873e2d9c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 156,
+      "total_deletions": 66,
+      "accepted_lines": 110,
+      "overriden_lines": 0
+    },
+    "fe9e3c31b76336ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4f900daf-e3e1-4843-a21f-f0ab5f2eb6ec",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 13,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
