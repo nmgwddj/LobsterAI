@@ -426,6 +426,18 @@ export class OpenClawEngineManager extends EventEmitter {
       // This keeps plaintext credentials out of the config file on disk.
       ...this.secretEnvVars,
     };
+
+    // Ensure the gateway process uses the host's local timezone for logging.
+    // macOS does not set TZ in the environment by default (it uses NSTimeZone/ICU),
+    // so utilityProcess.fork() children may fall back to UTC for date formatting.
+    if (!env.TZ) {
+      const hostTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (hostTimezone) {
+        env.TZ = hostTimezone;
+        console.log(`[OpenClaw] injected TZ=${hostTimezone} into gateway env`);
+      }
+    }
+
     if (cliShimDir) {
       // Plain object is case-sensitive: the spread key from process.env on Windows is "Path",
       // not "PATH". We must read the actual key to avoid creating a PATH with only cliShimDir.
@@ -1222,6 +1234,24 @@ export class OpenClawEngineManager extends EventEmitter {
     }, 1200);
   }
 
+  // Workaround: Electron utilityProcess V8 isolate reports getTimezoneOffset()=0.
+  private static rewriteUtcTimestamps(text: string): string {
+    return text.replace(
+      /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g,
+      (utc) => {
+        const d = new Date(utc);
+        if (Number.isNaN(d.getTime())) return utc;
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const ms = String(d.getMilliseconds()).padStart(3, '0');
+        const offsetMin = -d.getTimezoneOffset();
+        const sign = offsetMin >= 0 ? '+' : '-';
+        const absH = Math.floor(Math.abs(offsetMin) / 60);
+        const absM = Math.abs(offsetMin) % 60;
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${ms}${sign}${pad(absH)}:${pad(absM)}`;
+      },
+    );
+  }
+
   private attachGatewayProcessLogs(child: GatewayProcess): void {
     ensureDir(path.dirname(this.gatewayLogPath));
     const appendLog = (chunk: Buffer | string, stream: 'stdout' | 'stderr') => {
@@ -1234,11 +1264,13 @@ export class OpenClawEngineManager extends EventEmitter {
 
     child.stdout?.on('data', (chunk) => {
       appendLog(chunk, 'stdout');
-      console.log(`[OpenClaw stdout] ${typeof chunk === 'string' ? chunk : chunk.toString()}`);
+      const text = typeof chunk === 'string' ? chunk : chunk.toString();
+      console.log(`[OpenClaw stdout] ${OpenClawEngineManager.rewriteUtcTimestamps(text)}`);
     });
     child.stderr?.on('data', (chunk) => {
       appendLog(chunk, 'stderr');
-      console.error(`[OpenClaw stderr] ${typeof chunk === 'string' ? chunk : chunk.toString()}`);
+      const text = typeof chunk === 'string' ? chunk : chunk.toString();
+      console.error(`[OpenClaw stderr] ${OpenClawEngineManager.rewriteUtcTimestamps(text)}`);
     });
   }
 
