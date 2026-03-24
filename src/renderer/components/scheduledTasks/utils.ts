@@ -1,3 +1,4 @@
+import cronstrue from 'cronstrue/i18n';
 import { i18nService } from '../../services/i18n';
 import type {
   ScheduledTask,
@@ -77,6 +78,11 @@ function formatCronExpr(schedule: ScheduleCron): string {
     return tpl(i18nService.t('scheduledTasksCronEveryNHours'), { n: String(hour.step) });
   }
 
+  // --- Every hour at fixed minute: M * * * * (e.g. 25 * * * *) ---
+  if (min.type === 'value' && hour.type === 'any' && dom.type === 'any' && mon.type === 'any' && dow.type === 'any') {
+    return tpl(i18nService.t('scheduledTasksCronEveryHourAtMinute'), { min: pad2(min.value) });
+  }
+
   // From here we need a fixed time (both minute and hour are concrete values)
   if (min.type !== 'value' || hour.type !== 'value') return fallbackCron(schedule);
   const time = `${pad2(hour.value)}:${pad2(min.value)}`;
@@ -138,7 +144,13 @@ function formatCronExpr(schedule: ScheduleCron): string {
 
 function fallbackCron(schedule: ScheduleCron): string {
   const tzLabel = schedule.tz ? ` (${schedule.tz})` : '';
-  return `Cron · ${schedule.expr}${tzLabel}`;
+  try {
+    const locale = i18nService.getLanguage() === 'zh' ? 'zh_CN' : 'en';
+    const desc = cronstrue.toString(schedule.expr, { locale, use24HourTimeFormat: true });
+    return `${desc}${tzLabel}`;
+  } catch {
+    return `Cron · ${schedule.expr}${tzLabel}`;
+  }
 }
 
 export function formatScheduleLabel(schedule: Schedule): string {
