@@ -1,0 +1,23 @@
+docs/superpowers/plans/2026-03-23-enterprise-config-plan.md
+  dc2569e19c23d4e1 1-980
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "bf7ad2375754c2833077f06155fd8dc673062a78",
+  "prompts": {
+    "dc2569e19c23d4e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7c97fea1-9006-41ac-83a8-7cffeee6e01d",
+        "model": "unknown"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 980,
+      "overriden_lines": 0
+    }
+  }
+}
