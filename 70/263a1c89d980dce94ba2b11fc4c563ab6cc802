@@ -1,0 +1,37 @@
+src/renderer/components/im/IMSettings.tsx
+  d125c1d27a7ccdd2 142-143,258,262,504-521,526-527,544-545,3040-3044
+  8d888da9bf34b84f 522
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "70263a1c89d980dce94ba2b11fc4c563ab6cc802",
+  "prompts": {
+    "8d888da9bf34b84f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86bf0770-5cc4-4105-a08e-3d2c873e2d9c",
+        "model": "unknown"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "d125c1d27a7ccdd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "71aa11df-def6-4199-9ca0-5d0dd192687c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 31,
+      "total_deletions": 11,
+      "accepted_lines": 31,
+      "overriden_lines": 0
+    }
+  }
+}
