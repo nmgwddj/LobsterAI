@@ -201,11 +201,22 @@ export class OpenClawChannelSessionSync {
   /** Keys that have been tried and are not recognized — avoids repeated log noise. */
   private readonly rejectedKeys = new Set<string>();
 
+  /** Sessions created due to agent binding change — should skip full history sync. */
+  private readonly agentChangedSessionIds = new Set<string>();
+
   constructor(deps: ChannelSessionSyncDeps) {
     this.coworkStore = deps.coworkStore;
     this.imStore = deps.imStore;
     this.getDefaultCwd = deps.getDefaultCwd;
     this.resolveJobName = deps.resolveJobName ?? null;
+  }
+
+  /**
+   * Check if a session was created due to an agent binding change.
+   * Consumes the flag (returns true only once per sessionId).
+   */
+  popAgentChangedSession(sessionId: string): boolean {
+    return this.agentChangedSessionIds.delete(sessionId);
   }
 
   /**
@@ -263,6 +274,8 @@ export class OpenClawChannelSessionSync {
           console.log('[ChannelSessionSync] created new session for agent change:', newSession.id);
           this.imStore.updateSessionMappingTarget(parsed.conversationId, parsed.platform, newSession.id, currentAgentId);
           this.syncedSessionKeys.set(sessionKey, newSession.id);
+          // Mark so the adapter skips full history sync for this session
+          this.agentChangedSessionIds.add(newSession.id);
           return newSession.id;
         }
         console.log('[ChannelSessionSync] existing cowork session found, reusing:', existingMapping.coworkSessionId);

@@ -774,7 +774,16 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
           hasNew = true;
           // Queue full history sync for newly discovered sessions
           if (!this.fullySyncedSessions.has(sessionId)) {
-            newSessionsToSync.push({ sessionId, sessionKey: key });
+            // Sessions created due to agent binding change should NOT pull old history.
+            // Instead, mark as synced and initialize cursor to current history length.
+            if (this.channelSessionSync.popAgentChangedSession(sessionId)) {
+              console.log('[ChannelSync] agent-changed session, skipping full history sync:', sessionId);
+              this.fullySyncedSessions.add(sessionId);
+              // Initialize cursor by fetching current history length so only future messages sync
+              this.initAgentChangedCursor(sessionId, key);
+            } else {
+              newSessionsToSync.push({ sessionId, sessionKey: key });
+            }
           }
         }
       }
@@ -2949,6 +2958,26 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
    *
    * Uses position-based matching to avoid false dedup of identical-content messages.
    */
+  /**
+   * Initialize the sync cursor for a session created by agent binding change.
+   * Fetches the current gateway history length so only future messages are picked up.
+   */
+  private async initAgentChangedCursor(sessionId: string, sessionKey: string): Promise<void> {
+    try {
+      const client = this.gatewayClient;
+      if (!client) return;
+      const history = await client.request<{ messages?: unknown[] }>('chat.history', {
+        sessionKey,
+        limit: FINAL_HISTORY_SYNC_LIMIT,
+      });
+      const count = Array.isArray(history?.messages) ? history.messages.length : 0;
+      this.channelSyncCursor.set(sessionId, count);
+      console.log('[ChannelSync] initAgentChangedCursor: set cursor to', count, 'for session', sessionId);
+    } catch (err) {
+      console.warn('[ChannelSync] initAgentChangedCursor failed:', err);
+    }
+  }
+
   private async syncFullChannelHistory(sessionId: string, sessionKey: string): Promise<void> {
     if (this.fullySyncedSessions.has(sessionId)) return;
     this.fullySyncedSessions.add(sessionId);
