@@ -577,8 +577,8 @@ export class IMGatewayManager extends EventEmitter {
       addCheck({
         code: 'missing_credentials',
         level: 'fail',
-        message: `缺少必要配置项: ${missingCredentials.join(', ')}`,
-        suggestion: '请补全配置后重新测试连通性。',
+        message: t('imMissingCredentials', { fields: missingCredentials.join(', ') }),
+        suggestion: t('imFillCredentials'),
       });
 
       return {
@@ -593,7 +593,7 @@ export class IMGatewayManager extends EventEmitter {
       const authMessage = await this.withTimeout(
         this.runAuthProbe(platform, config),
         CONNECTIVITY_TIMEOUT_MS,
-        '鉴权探测超时'
+        t('imAuthProbeTimeout')
       );
       addCheck({
         code: 'auth_check',
@@ -604,8 +604,8 @@ export class IMGatewayManager extends EventEmitter {
       addCheck({
         code: 'auth_check',
         level: 'fail',
-        message: `鉴权失败: ${error.message}`,
-        suggestion: '请检查 ID/Secret/Token 是否正确，且机器人权限已开通。',
+        message: t('imAuthFailed', { error: error.message }),
+        suggestion: t('imAuthFailedSuggestion'),
       });
       return {
         platform,
@@ -623,15 +623,15 @@ export class IMGatewayManager extends EventEmitter {
       addCheck({
         code: 'gateway_running',
         level: 'warn',
-        message: 'IM 渠道已启用但当前未连接。',
-        suggestion: '请检查网络、机器人配置和平台侧事件开关。',
+        message: t('imChannelEnabledNotConnected'),
+        suggestion: t('imChannelEnabledNotConnectedSuggestion'),
       });
     } else {
       addCheck({
         code: 'gateway_running',
         level: connected ? 'pass' : 'info',
-        message: connected ? 'IM 渠道已启用且运行正常。' : 'IM 渠道当前未启用。',
-        suggestion: connected ? undefined : '请点击对应 IM 渠道胶囊按钮启用该渠道。',
+        message: connected ? t('imChannelRunning') : t('imChannelNotEnabled'),
+        suggestion: connected ? undefined : t('imChannelNotEnabledSuggestion'),
       });
     }
 
@@ -644,21 +644,21 @@ export class IMGatewayManager extends EventEmitter {
         addCheck({
           code: 'inbound_activity',
           level: 'warn',
-          message: '已连接超过 2 分钟，但尚未收到任何入站消息。',
-          suggestion: '请确认机器人已在目标会话中，或按平台规则 @机器人 触发消息。',
+          message: t('imNoInboundAfter2Min'),
+          suggestion: t('imNoInboundSuggestion'),
         });
       } else {
         addCheck({
           code: 'inbound_activity',
           level: 'pass',
-          message: '已检测到入站消息。',
+          message: t('imInboundDetected'),
         });
       }
     } else if (connected) {
       addCheck({
         code: 'inbound_activity',
         level: 'info',
-        message: '网关刚启动，入站活动检查将在 2 分钟后更准确。',
+        message: t('imGatewayJustStarted'),
       });
     }
 
@@ -667,21 +667,21 @@ export class IMGatewayManager extends EventEmitter {
         addCheck({
           code: 'outbound_activity',
           level: 'warn',
-          message: '已收到消息，但尚未观察到成功回发。',
-          suggestion: '请检查消息发送权限、机器人可见范围和会话回包权限。',
+          message: t('imNoOutbound'),
+          suggestion: t('imNoOutboundSuggestion'),
         });
       } else {
         addCheck({
           code: 'outbound_activity',
           level: 'pass',
-          message: '已检测到成功回发消息。',
+          message: t('imOutboundDetected'),
         });
       }
     } else if (connected) {
       addCheck({
         code: 'outbound_activity',
         level: 'info',
-        message: '尚未收到可用于评估回发能力的入站消息。',
+        message: t('imNoInboundForOutboundCheck'),
       });
     }
 
@@ -690,10 +690,10 @@ export class IMGatewayManager extends EventEmitter {
       addCheck({
         code: 'platform_last_error',
         level: connected ? 'warn' : 'fail',
-        message: `最近错误: ${lastError}`,
+        message: t('imRecentError', { error: lastError }),
         suggestion: connected
-          ? '当前已连接，但建议修复该错误避免后续中断。'
-          : '该错误可能阻断对话，请优先修复后重试。',
+          ? t('imRecentErrorConnectedSuggestion')
+          : t('imRecentErrorDisconnectedSuggestion'),
       });
     }
 
@@ -701,8 +701,8 @@ export class IMGatewayManager extends EventEmitter {
       addCheck({
         code: 'qq_guild_mention_hint',
         level: 'info',
-        message: 'QQ 通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
-        suggestion: '频道中需 @机器人 触发对话，也支持私信和群聊。',
+        message: t('imQqOpenClawHint'),
+        suggestion: t('imQqMentionHint'),
       });
     }
 
@@ -1040,8 +1040,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: '缺少必要配置项: botToken',
-        suggestion: '请补全 Bot Token 后重新测试连通性。',
+        message: t('imTelegramMissingBotToken'),
+        suggestion: t('imTelegramFillBotToken'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1055,20 +1055,20 @@ export class IMGatewayManager extends EventEmitter {
           CONNECTIVITY_TIMEOUT_MS
         ),
         CONNECTIVITY_TIMEOUT_MS,
-        '鉴权探测超时'
+        t('imAuthProbeTimeout')
       );
       if (response?.ok && response.result?.username) {
         checks.push({
           code: 'auth_check',
           level: 'pass',
-          message: `Telegram Bot 鉴权通过: @${response.result.username}`,
+          message: t('imTelegramAuthPassed', { username: response.result.username }),
         });
       } else {
         checks.push({
           code: 'auth_check',
           level: 'fail',
-          message: `Telegram Bot 鉴权失败: ${response?.description || '未知错误'}`,
-          suggestion: '请检查 Bot Token 是否正确。',
+          message: t('imTelegramAuthFailed', { error: response?.description || t('imTelegramAuthFailedUnknown') }),
+          suggestion: t('imTelegramCheckToken'),
         });
         return { platform, testedAt, verdict: 'fail', checks };
       }
@@ -1076,8 +1076,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'auth_check',
         level: 'fail',
-        message: `Telegram Bot 鉴权失败: ${error.message}`,
-        suggestion: '请检查 Bot Token 是否正确，且网络通畅。',
+        message: t('imTelegramAuthFailed', { error: error.message }),
+        suggestion: t('imTelegramCheckTokenNetwork'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1086,7 +1086,7 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: 'Telegram 通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imTelegramOpenClawHint'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1114,8 +1114,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: '缺少必要配置项: botToken',
-        suggestion: '请补全 Bot Token 后重新测试连通性。',
+        message: t('imDiscordMissingBotToken'),
+        suggestion: t('imDiscordFillBotToken'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1129,7 +1129,7 @@ export class IMGatewayManager extends EventEmitter {
           CONNECTIVITY_TIMEOUT_MS
         ),
         CONNECTIVITY_TIMEOUT_MS,
-        '鉴权探测超时'
+        t('imAuthProbeTimeout')
       );
       const username = response?.username
         ? `${response.username}${response.discriminator && response.discriminator !== '0' ? `#${response.discriminator}` : ''}`
@@ -1137,14 +1137,14 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'auth_check',
         level: 'pass',
-        message: `Discord Bot 鉴权通过（Bot: ${username}）。`,
+        message: t('imDiscordAuthPassed', { username }),
       });
     } catch (error: any) {
       checks.push({
         code: 'auth_check',
         level: 'fail',
-        message: `Discord Bot 鉴权失败: ${error.message}`,
-        suggestion: '请检查 Bot Token 是否正确，且网络通畅。',
+        message: t('imDiscordAuthFailed', { error: error.message }),
+        suggestion: t('imDiscordCheckTokenNetwork'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1153,14 +1153,14 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: 'Discord 通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imDiscordOpenClawHint'),
     });
 
     // Check 4: Group mention hint
     checks.push({
       code: 'discord_group_requires_mention',
       level: 'info',
-      message: 'Discord 群聊中仅响应 @机器人的消息。',
+      message: t('imDiscordGroupMention'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1190,8 +1190,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: `缺少必要配置项: ${missing.join(', ')}`,
-        suggestion: '请补全 App ID 和 App Secret 后重新测试连通性。',
+        message: t('imMissingCredentials', { fields: missing.join(', ') }),
+        suggestion: t('imFeishuFillAppIdSecret'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1217,14 +1217,14 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'auth_check',
         level: 'pass',
-        message: `飞书鉴权通过（Bot: ${botName}）`,
+        message: t('imFeishuAuthPassed', { botName }),
       });
     } catch (error: any) {
       checks.push({
         code: 'auth_check',
         level: 'fail',
-        message: `飞书鉴权失败: ${error.message}`,
-        suggestion: '请检查 App ID 和 App Secret 是否正确。',
+        message: t('imFeishuAuthFailed', { error: error.message }),
+        suggestion: t('imFeishuCheckAppIdSecret'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1233,23 +1233,23 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: '飞书通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imFeishuOpenClawHint'),
     });
 
     // Check 4: Group mention hint
     checks.push({
       code: 'feishu_group_requires_mention',
       level: 'info',
-      message: '飞书群聊中仅响应 @机器人的消息。',
-      suggestion: '请在群聊中使用 @机器人 + 内容触发对话。',
+      message: t('imFeishuGroupMention'),
+      suggestion: t('imFeishuGroupMentionSuggestion'),
     });
 
     // Check 5: Event subscription hint
     checks.push({
       code: 'feishu_event_subscription_required',
       level: 'info',
-      message: '飞书需要开启消息事件订阅（im.message.receive_v1）才能收消息。',
-      suggestion: '请在飞书开发者后台确认事件订阅、权限和发布状态。',
+      message: t('imFeishuEventSubscription'),
+      suggestion: t('imFeishuEventSubscriptionSuggestion'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1279,8 +1279,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: `缺少必要配置项: ${missing.join(', ')}`,
-        suggestion: '请补全 Client ID 和 Client Secret 后重新测试连通性。',
+        message: t('imMissingCredentials', { fields: missing.join(', ') }),
+        suggestion: t('imDingtalkFillClientIdSecret'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1291,7 +1291,7 @@ export class IMGatewayManager extends EventEmitter {
       const resp = await this.withTimeout(
         fetchJsonWithTimeout<{ errcode?: number; errmsg?: string; access_token?: string }>(tokenUrl, {}, CONNECTIVITY_TIMEOUT_MS),
         CONNECTIVITY_TIMEOUT_MS,
-        '鉴权探测超时'
+        t('imAuthProbeTimeout')
       );
       if (resp.errcode && resp.errcode !== 0) {
         throw new Error(resp.errmsg || `errcode ${resp.errcode}`);
@@ -1299,14 +1299,14 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'auth_check',
         level: 'pass',
-        message: '钉钉鉴权通过。',
+        message: t('imDingtalkAuthPassed'),
       });
     } catch (error: any) {
       checks.push({
         code: 'auth_check',
         level: 'fail',
-        message: `钉钉鉴权失败: ${error.message}`,
-        suggestion: '请检查 Client ID 和 Client Secret 是否正确，且机器人权限已开通。',
+        message: t('imDingtalkAuthFailed', { error: error.message }),
+        suggestion: t('imDingtalkCheckClientIdSecret'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1315,15 +1315,15 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: '钉钉通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imDingtalkOpenClawHint'),
     });
 
     // Check 4: Bot membership hint
     checks.push({
       code: 'dingtalk_bot_membership_hint',
       level: 'info',
-      message: '钉钉机器人需被加入目标会话并具备发言权限。',
-      suggestion: '请确认机器人在目标会话中，且企业权限配置允许收发消息。',
+      message: t('imDingtalkBotMembership'),
+      suggestion: t('imDingtalkBotMembershipSuggestion'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1353,8 +1353,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: `缺少必要配置项: ${missing.join(', ')}`,
-        suggestion: '请补全 Bot ID 和 Secret 后重新测试连通性。',
+        message: t('imMissingCredentials', { fields: missing.join(', ') }),
+        suggestion: t('imWecomFillBotIdSecret'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1363,14 +1363,14 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'auth_check',
       level: 'pass',
-      message: `企业微信配置已就绪（Bot ID: ${wcConfig.botId}）。`,
+      message: t('imWecomConfigReady', { botId: wcConfig.botId }),
     });
 
     // Check 3: OpenClaw Gateway running info
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: '企业微信通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imWecomOpenClawHint'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1397,8 +1397,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'gateway_running',
         level: 'info',
-        message: '微信渠道当前未启用。',
-        suggestion: '请启用微信渠道后重新测试连通性。',
+        message: t('imWeixinNotEnabled'),
+        suggestion: t('imWeixinEnableSuggestion'),
       });
       return { platform, testedAt, verdict: 'pass', checks };
     }
@@ -1407,14 +1407,14 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'auth_check',
       level: 'pass',
-      message: '微信配置已就绪。',
+      message: t('imWeixinConfigReady'),
     });
 
     // OpenClaw Gateway running info
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: '微信通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imWeixinOpenClawHint'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1504,8 +1504,8 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: `缺少必要配置项: ${missing.join(', ')}`,
-        suggestion: '请补全 AppKey、Account 和 Token 后重新测试连通性。',
+        message: t('imMissingCredentials', { fields: missing.join(', ') }),
+        suggestion: t('imNimFillCredentials'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1513,20 +1513,20 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'auth_check',
       level: 'pass',
-      message: `云信配置已就绪（Account: ${nimConfig.account}）。`,
+      message: t('imNimConfigReady', { account: nimConfig.account }),
     });
 
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: '云信通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imNimOpenClawHint'),
     });
 
     checks.push({
       code: 'nim_p2p_only_hint',
       level: 'info',
-      message: '云信 IM 当前仅支持 P2P（私聊）消息。',
-      suggestion: '请通过私聊方式向机器人账号发送消息触发对话。',
+      message: t('imNimP2pOnly'),
+      suggestion: t('imNimP2pOnlySuggestion'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1563,10 +1563,10 @@ export class IMGatewayManager extends EventEmitter {
       checks.push({
         code: 'missing_credentials',
         level: 'fail',
-        message: `缺少必要配置项: ${missing.join(', ')}`,
+        message: t('imMissingCredentials', { fields: missing.join(', ') }),
         suggestion: isWebhookMode
-          ? '请补全 appKey、appSecret、token 和 aesKey 后重新测试连通性。'
-          : '请补全 appKey、appSecret 和 aesKey 后重新测试连通性。',
+          ? t('imPopoFillWebhookCredentials')
+          : t('imPopoFillWsCredentials'),
       });
       return { platform, testedAt, verdict: 'fail', checks };
     }
@@ -1575,14 +1575,14 @@ export class IMGatewayManager extends EventEmitter {
     checks.push({
       code: 'auth_check',
       level: 'pass',
-      message: 'POPO 配置已就绪。',
+      message: t('imPopoConfigReady'),
     });
 
     // Check 3: OpenClaw Gateway running info
     checks.push({
       code: 'gateway_running',
       level: 'info',
-      message: 'POPO 通过 OpenClaw 运行时运行，Bot 将在 OpenClaw Gateway 启动后自动连接。',
+      message: t('imPopoOpenClawHint'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
@@ -1681,7 +1681,7 @@ export class IMGatewayManager extends EventEmitter {
       if (resp.errcode && resp.errcode !== 0) {
         throw new Error(resp.errmsg || `errcode ${resp.errcode}`);
       }
-      return '钉钉鉴权通过。';
+      return t('imDingtalkAuthPassed');
     }
 
     if (platform === 'feishu') {
@@ -1701,15 +1701,15 @@ export class IMGatewayManager extends EventEmitter {
         throw new Error(response.msg || `code ${response.code}`);
       }
       const botName = response.data?.app_name ?? response.data?.bot?.app_name ?? 'unknown';
-      return `飞书鉴权通过（Bot: ${botName}）。`;
+      return t('imFeishuAuthPassedWithBot', { botName });
     }
 
     if (platform === 'nim') {
       const { appKey, account, token } = config.nim;
       if (!appKey || !account || !token) {
-        throw new Error('配置不完整');
+        throw new Error(t('imConfigIncomplete'));
       }
-      return `云信配置已就绪（Account: ${account}）。`;
+      return t('imNimConfigReady', { account });
     }
 
     if (platform === 'xiaomifeng') {
@@ -1717,38 +1717,38 @@ export class IMGatewayManager extends EventEmitter {
       // 这里我们只做配置完整性检查，实际登录验证在 start 时进行
       const { clientId, secret } = config.xiaomifeng;
       if (!clientId || !secret) {
-        throw new Error('配置不完整');
+        throw new Error(t('imConfigIncomplete'));
       }
-      return `小蜜蜂配置已就绪（Client ID: ${clientId}）。`;
+      return t('imXiaomifengConfigReady', { clientId });
     }
 
     if (platform === 'wecom') {
       const { botId, secret } = config.wecom;
       if (!botId || !secret) {
-        throw new Error('配置不完整');
+        throw new Error(t('imConfigIncomplete'));
       }
-      return `企业微信配置已就绪（Bot ID: ${botId}），通过 OpenClaw 运行。`;
+      return t('imWecomConfigReadyOpenClaw', { botId });
 
     }
 
     if (platform === 'weixin') {
       // Weixin has no credentials to probe; just confirm enabled
-      return '微信配置已就绪，通过 OpenClaw 运行。';
+      return t('imWeixinConfigReadyOpenClaw');
     }
 
     if (platform === 'popo') {
       const { appKey, appSecret, token, aesKey, connectionMode } = config.popo;
       const isWebhook = (connectionMode ?? 'websocket') === 'webhook';
       if (!appKey || !appSecret || !aesKey || (isWebhook && !token)) {
-        throw new Error('配置不完整');
+        throw new Error(t('imConfigIncomplete'));
       }
-      return 'POPO 配置已就绪，通过 OpenClaw 运行。';
+      return t('imPopoConfigReadyOpenClaw');
     }
 
     if (platform === 'qq') {
       const { appId, appSecret } = config.qq;
       if (!appId || !appSecret) {
-        throw new Error('配置不完整');
+        throw new Error(t('imConfigIncomplete'));
       }
       // Verify credentials by requesting an AccessToken directly via HTTP
       // This avoids starting a full WebSocket connection just for auth check
@@ -1762,12 +1762,12 @@ export class IMGatewayManager extends EventEmitter {
         CONNECTIVITY_TIMEOUT_MS
       );
       if (!tokenResponse.access_token) {
-        throw new Error(tokenResponse.message || '获取 AccessToken 失败');
+        throw new Error(tokenResponse.message || t('imQqAccessTokenFailed'));
       }
-      return `QQ 鉴权通过（AccessToken 已获取）。`;
+      return t('imQqAuthPassed');
     }
 
-    return '未知平台。';
+    return t('imUnknownPlatform');
   }
 
 
