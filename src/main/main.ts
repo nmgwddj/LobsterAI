@@ -17,7 +17,7 @@ import type { PermissionResult } from '@anthropic-ai/claude-agent-sdk';
 import { getCurrentApiConfig, resolveCurrentApiConfig, setStoreGetter, setAuthTokensGetter, setServerBaseUrlGetter } from './libs/claudeSettings';
 import { saveCoworkApiConfig } from './libs/coworkConfigStore';
 import { generateSessionTitle, probeCoworkModelReadiness } from './libs/coworkUtil';
-import { startCoworkOpenAICompatProxy, stopCoworkOpenAICompatProxy, setProxyTokenRefresher } from './libs/coworkOpenAICompatProxy';
+import { startCoworkOpenAICompatProxy, stopCoworkOpenAICompatProxy, registerProxyTokenRefresher } from './libs/coworkOpenAICompatProxy';
 import { OpenClawEngineManager, type OpenClawEngineStatus } from './libs/openclawEngineManager';
 import {
   listPairingRequests,
@@ -4404,9 +4404,7 @@ if (!gotTheLock) {
       });
     }
 
-    // Wire up token refresher for the OpenAI compat proxy so it can retry
-    // on 401/403 with a fresh accessToken instead of failing immediately.
-    setProxyTokenRefresher(async () => {
+    registerProxyTokenRefresher('lobsterai-server', async () => {
       const tokens = getAuthTokens();
       if (!tokens?.refreshToken) return null;
       const serverBaseUrl = getServerApiBaseUrl();
@@ -4428,6 +4426,17 @@ if (!gotTheLock) {
         console.warn('[Auth] proxy token refresh failed:', err);
       }
       return null;
+    });
+
+    registerProxyTokenRefresher('github-copilot', async () => {
+      try {
+        const { refreshCopilotTokenNow } = await import('./libs/copilotTokenManager');
+        const refreshed = await refreshCopilotTokenNow();
+        return refreshed.copilotToken;
+      } catch (err) {
+        console.warn('[Auth] Copilot proxy token refresh failed:', err);
+        return null;
+      }
     });
 
     bindCoworkRuntimeForwarder();

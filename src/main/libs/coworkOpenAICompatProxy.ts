@@ -75,7 +75,13 @@ let proxyServer: http.Server | null = null;
 let proxyPort: number | null = null;
 let upstreamConfig: OpenAICompatUpstreamConfig | null = null;
 let lastProxyError: string | null = null;
-let tokenRefresher: (() => Promise<string | null>) | null = null;
+/**
+ * Per-provider token refreshers.  When the proxy receives a 401/403 from an
+ * upstream, it looks up the refresher for the current provider and retries once
+ * with the new token.  Providers register their refresher via
+ * {@link registerProxyTokenRefresher}.
+ */
+const tokenRefreshers = new Map<string, () => Promise<string | null>>();
 let currentCoworkSessionId: string | null = null;
 const toolCallExtraContentById = new Map<string, unknown>();
 
@@ -2247,25 +2253,29 @@ async function handleRequest(
         headers: upstreamHeaders,
         body,
       });
-      // Auto-retry once for Copilot token expiry
+      // Auto-retry once for token expiry using provider-based refresher
       if (
-        upstreamConfig.provider === 'github-copilot'
-        && (upstreamResponse.status === 401 || upstreamResponse.status === 403)
+        (upstreamResponse.status === 401 || upstreamResponse.status === 403)
+        && upstreamConfig.provider
       ) {
-        console.log('[CoworkProxy] OpenAI passthrough: Copilot auth error, refreshing token and retrying...');
-        try {
-          const { refreshCopilotTokenNow } = await import('./copilotTokenManager');
-          const refreshed = await refreshCopilotTokenNow();
-          upstreamConfig.apiKey = refreshed.copilotToken;
-          upstreamHeaders.Authorization = `Bearer ${refreshed.copilotToken}`;
-          upstreamResponse = await session.defaultSession.fetch(upstreamUrl, {
-            method: 'POST',
-            headers: upstreamHeaders,
-            body,
-          });
-          console.log(`[CoworkProxy] OpenAI passthrough: retry status=${upstreamResponse.status}`);
-        } catch (refreshErr) {
-          console.warn('[CoworkProxy] OpenAI passthrough: token refresh failed:', refreshErr);
+        const refresher = tokenRefreshers.get(upstreamConfig.provider);
+        if (refresher) {
+          console.log(`[CoworkProxy] OpenAI passthrough: ${upstreamConfig.provider} auth error, refreshing token and retrying...`);
+          try {
+            const newToken = await refresher();
+            if (newToken) {
+              upstreamConfig.apiKey = newToken;
+              upstreamHeaders.Authorization = `Bearer ${newToken}`;
+              upstreamResponse = await session.defaultSession.fetch(upstreamUrl, {
+                method: 'POST',
+                headers: upstreamHeaders,
+                body,
+              });
+              console.log(`[CoworkProxy] OpenAI passthrough: retry status=${upstreamResponse.status}`);
+            }
+          } catch (refreshErr) {
+            console.warn(`[CoworkProxy] OpenAI passthrough: ${upstreamConfig.provider} token refresh failed:`, refreshErr);
+          }
         }
       }
       // Pipe response back
@@ -2423,23 +2433,29 @@ async function handleRequest(
   }
 
   if (!upstreamResponse.ok) {
-    // 401/403 from lobsterai-server likely means the JWT accessToken expired.
-    // Refresh the token and retry once before falling through to other error handling.
-    if ((upstreamResponse.status === 401 || upstreamResponse.status === 403) && tokenRefresher) {
-      console.log(`[CoworkProxy] Got ${upstreamResponse.status}, attempting token refresh and retry...`);
-      try {
-        const newToken = await tokenRefresher();
-        if (newToken) {
-          headers.Authorization = `Bearer ${newToken}`;
-          if (upstreamConfig) {
-            upstreamConfig.apiKey = newToken;
+    // 401/403 likely means the token expired.  Look up the registered
+    // refresher for this provider and retry once with a fresh token.
+    if (
+      (upstreamResponse.status === 401 || upstreamResponse.status === 403)
+      && upstreamConfig?.provider
+    ) {
+      const refresher = tokenRefreshers.get(upstreamConfig.provider);
+      if (refresher) {
+        console.log(`[CoworkProxy] Got ${upstreamResponse.status} from ${upstreamConfig.provider}, attempting token refresh and retry...`);
+        try {
+          const newToken = await refresher();
+          if (newToken) {
+            headers.Authorization = `Bearer ${newToken}`;
+            if (upstreamConfig) {
+              upstreamConfig.apiKey = newToken;
+            }
+            upstreamResponse = await sendUpstreamRequest(upstreamRequest, currentTargetURL);
+            const retryDuration = Date.now() - fetchStartTime;
+            console.log(`[CoworkProxy] Token refresh retry: status=${upstreamResponse.status}, ok=${upstreamResponse.ok}, fetchTime=${retryDuration}ms`);
           }
-          upstreamResponse = await sendUpstreamRequest(upstreamRequest, currentTargetURL);
-          const retryDuration = Date.now() - fetchStartTime;
-          console.log(`[CoworkProxy] Token refresh retry: status=${upstreamResponse.status}, ok=${upstreamResponse.ok}, fetchTime=${retryDuration}ms`);
+        } catch (refreshError) {
+          console.warn(`[CoworkProxy] Token refresh for ${upstreamConfig.provider} failed:`, refreshError);
         }
-      } catch (refreshError) {
-        console.warn('[CoworkProxy] Token refresh retry failed:', refreshError);
       }
     }
 
@@ -2456,27 +2472,6 @@ async function handleRequest(
         }
         if (upstreamResponse.ok || upstreamResponse.status !== 404) {
           break;
-        }
-      }
-    }
-
-    if (!upstreamResponse.ok) {
-      // Auto-retry once for Copilot token expiry (401/403)
-      if (
-        upstreamConfig.provider === 'github-copilot'
-        && (upstreamResponse.status === 401 || upstreamResponse.status === 403)
-      ) {
-        console.log('[CoworkProxy] Copilot auth error, refreshing token and retrying...');
-        try {
-          const { refreshCopilotTokenNow } = await import('./copilotTokenManager');
-          const refreshed = await refreshCopilotTokenNow();
-          // Update the in-memory upstream config with the new token
-          upstreamConfig.apiKey = refreshed.copilotToken;
-          headers.Authorization = `Bearer ${refreshed.copilotToken}`;
-          upstreamResponse = await sendUpstreamRequest(upstreamRequest, currentTargetURL);
-          console.log(`[CoworkProxy] Copilot retry response: status=${upstreamResponse.status}`);
-        } catch (refreshErr) {
-          console.warn('[CoworkProxy] Copilot token refresh failed:', refreshErr);
         }
       }
     }
@@ -2684,12 +2679,8 @@ export function configureCoworkOpenAICompatProxy(config: OpenAICompatUpstreamCon
   lastProxyError = null;
 }
 
-/**
- * Set a callback that refreshes the auth token and returns the new accessToken.
- * Called by the proxy on 401/403 to retry with a fresh token.
- */
-export function setProxyTokenRefresher(refresher: () => Promise<string | null>): void {
-  tokenRefresher = refresher;
+export function registerProxyTokenRefresher(provider: string, refresher: () => Promise<string | null>): void {
+  tokenRefreshers.set(provider, refresher);
 }
 
 export function getCoworkOpenAICompatProxyBaseURL(target: OpenAICompatProxyTarget = 'local'): string | null {
