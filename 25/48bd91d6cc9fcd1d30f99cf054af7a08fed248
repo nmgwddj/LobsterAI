@@ -1,0 +1,31 @@
+src/renderer/components/cowork/CoworkPromptInput.tsx
+  7c9c9556c2b32694 96-97,116,587,719-723
+src/renderer/components/cowork/CoworkView.tsx
+  7c9c9556c2b32694 49,53-65,519
+src/renderer/services/i18n.ts
+  7c9c9556c2b32694 524,531,1667,1674
+src/renderer/components/cowork/CoworkSessionDetail.tsx
+  7c9c9556c2b32694 38,1289,2211-2212
+src/main/i18n.ts
+  7c9c9556c2b32694 44,85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "2548bd91d6cc9fcd1d30f99cf054af7a08fed248",
+  "prompts": {
+    "7c9c9556c2b32694": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6ded8298-731b-43c8-b94f-ecdccf7516ea",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 34,
+      "total_deletions": 6,
+      "accepted_lines": 34,
+      "overriden_lines": 0
+    }
+  }
+}
