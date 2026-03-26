@@ -43,7 +43,19 @@ const normalizeModelName = (modelId: string): string => {
   const trimmed = modelId.trim();
   if (!trimmed) return 'default-model';
   const slashIndex = trimmed.lastIndexOf('/');
-  return slashIndex >= 0 ? trimmed.slice(slashIndex + 1) : trimmed;
+  const name = slashIndex >= 0 ? trimmed.slice(slashIndex + 1) : trimmed;
+  // Ensure the result is never empty after stripping prefix
+  return name.trim() || 'default-model';
+};
+
+/**
+ * Resolve the effective model display name with fallback chain:
+ * userModelName → normalizeModelName(modelId) → 'default-model'
+ */
+const resolveModelDisplayName = (modelId: string, userModelName?: string): string => {
+  const userName = userModelName?.trim();
+  if (userName) return userName;
+  return normalizeModelName(modelId);
 };
 
 
@@ -331,8 +343,9 @@ const buildProviderSelection = (options: {
   providerName?: string;
   codingPlanEnabled?: boolean;
   supportsImage?: boolean;
+  modelName?: string;
 }): OpenClawProviderSelection => {
-  const providerModelName = normalizeModelName(options.modelId);
+  const providerModelName = resolveModelDisplayName(options.modelId, options.modelName);
   const providerApi = mapApiTypeToOpenClawApi(options.apiType);
   const modelInput: string[] = options.supportsImage ? ['text', 'image'] : ['text'];
   const providerName = options.providerName ?? '';
@@ -573,6 +586,7 @@ export class OpenClawConfigSync {
       providerName: apiResolution.providerMetadata?.providerName,
       codingPlanEnabled: apiResolution.providerMetadata?.codingPlanEnabled,
       supportsImage: apiResolution.providerMetadata?.supportsImage,
+      modelName: apiResolution.providerMetadata?.modelName,
     });
     const sandboxMode = mapExecutionModeToSandboxMode(coworkConfig.executionMode || 'auto');
 
