@@ -1,0 +1,23 @@
+src/renderer/components/cowork/CoworkView.tsx
+  216d434421fd9255 232-236,238,316-317,319
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "fa62bdef5e22226d28ceb35d15e889aa60fc5b8e",
+  "prompts": {
+    "216d434421fd9255": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b382648-2d97-4d19-9bb4-64f2c6bae1ce",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 6,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
