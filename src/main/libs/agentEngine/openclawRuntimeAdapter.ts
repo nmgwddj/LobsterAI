@@ -22,12 +22,14 @@ import {
   type OpenClawChannelSessionSync,
   isManagedSessionKey,
   parseManagedSessionKey,
+  parseChannelSessionKey,
 } from '../openclawChannelSessionSync';
 import {
   extractGatewayHistoryEntries,
   extractGatewayMessageText,
 } from '../openclawHistory';
 import { buildOpenClawLocalTimeContextPrompt } from '../openclawLocalTimeContextPrompt';
+import { isDeleteCommand, getCommandDangerLevel } from '../commandSafety';
 import { setCoworkProxySessionId } from '../coworkOpenAICompatProxy';
 import { OPENCLAW_AGENT_TIMEOUT_SECONDS } from '../openclawConfigSync';
 import { t } from '../../i18n';
@@ -141,6 +143,8 @@ type BufferedAgentEvent = {
 type PendingApprovalEntry = {
   requestId: string;
   sessionId: string;
+  /** When true, use 'allow-always' decision so OpenClaw adds the command to its allowlist. */
+  allowAlways?: boolean;
 };
 
 type ChannelHistorySyncEntry = {
@@ -1003,19 +1007,46 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       return;
     }
 
-    const decision = result.behavior === 'allow' ? 'allow-once' : 'deny';
+    const decision = result.behavior !== 'allow' ? 'deny'
+      : pending.allowAlways ? 'allow-always'
+      : 'allow-once';
     const client = this.gatewayClient;
     if (!client) {
       this.pendingApprovals.delete(requestId);
       return;
     }
 
+    const sessionId = pending.sessionId;
+    // Only schedule continuation for user-initiated approvals (desktop modal),
+    // not for auto-approved commands (allowAlways).
+    const needsContinuation = !pending.allowAlways;
+
     void client.request('exec.approval.resolve', {
       id: requestId,
       decision,
+    }).then(() => {
+      if (!needsContinuation) return;
+      // Continue the session so the model can see the command result.
+      const prompt = decision !== 'deny'
+        ? t('execApprovalApproved')
+        : t('execApprovalDenied');
+      const tryContinue = (retries: number) => {
+        if (!this.store.getSession(sessionId)) return; // session deleted
+        if (!this.isSessionActive(sessionId)) {
+          void this.continueSession(sessionId, prompt).catch((error) => {
+            console.warn('[OpenClawRuntime] failed to continue session after approval:', error);
+          });
+          return;
+        }
+        // Session still active (user approved before run ended). Retry after delay.
+        if (retries > 0) {
+          setTimeout(() => tryContinue(retries - 1), 1000);
+        }
+      };
+      tryContinue(10);
     }).catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
-      this.emit('error', pending.sessionId, `Failed to resolve OpenClaw approval: ${message}`);
+      this.emit('error', sessionId, `Failed to resolve OpenClaw approval: ${message}`);
     }).finally(() => {
       this.pendingApprovals.delete(requestId);
     });
@@ -2625,13 +2656,32 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       return;
     }
 
+    const command = typeof request.command === 'string' ? request.command : '';
+    const isChannelSession = parseChannelSessionKey(sessionKey) !== null;
+
+    // Auto-approve: channel sessions always, local sessions for non-delete commands.
+    // Intentionally allows non-delete dangerous commands (git push, kill, chmod) without
+    // prompting — this is a deliberate trade-off to avoid the approval-pending timing
+    // issue on fresh installs.  Only file-deletion commands warrant a blocking modal.
+    // The allow-always decision adds the command to the gateway allowlist so subsequent
+    // calls skip the approval flow entirely.
+    if (isChannelSession || !isDeleteCommand(command)) {
+      this.pendingApprovals.set(requestId, { requestId, sessionId, allowAlways: true });
+      this.respondToPermission(requestId, { behavior: 'allow', updatedInput: {} });
+      return;
+    }
+
     this.pendingApprovals.set(requestId, { requestId, sessionId });
+
+    const { level: dangerLevel, reason: dangerReason } = getCommandDangerLevel(command);
 
     const permissionRequest: PermissionRequest = {
       requestId,
       toolName: 'Bash',
       toolInput: {
-        command: typeof request.command === 'string' ? request.command : '',
+        command,
+        dangerLevel,
+        dangerReason,
         cwd: request.cwd ?? null,
         host: request.host ?? null,
         security: request.security ?? null,
