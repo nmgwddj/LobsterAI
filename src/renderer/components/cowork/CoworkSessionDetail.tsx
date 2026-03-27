@@ -2089,6 +2089,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
         {turns.length > 1 && isScrollable && (
           <div
             className="absolute right-[18px] top-1/2 -translate-y-1/2 w-5 flex flex-col items-end z-10"
+            style={{ maxHeight: 'calc(100% - 40px)' }}
             onMouseEnter={() => setIsRailHovered(true)}
             onMouseLeave={() => {
               setIsRailHovered(false);
@@ -2120,8 +2121,8 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
             {/* Message Lines */}
             <div
               ref={railLinesRef}
-              className="overflow-y-auto"
-              style={{ maxHeight: '60vh', scrollbarWidth: 'none' }}
+              className="overflow-y-auto min-h-0 flex-1"
+              style={{ scrollbarWidth: 'none' }}
             >
             {(() => {
               // Build flat list of messages with their content length and turn index
