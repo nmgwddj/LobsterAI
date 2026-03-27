@@ -527,6 +527,8 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
   private gatewayClient: GatewayClientLike | null = null;
   private gatewayClientVersion: string | null = null;
   private gatewayClientEntryPath: string | null = null;
+  /** Holds the client between start() and onHelloOk so stopGatewayClient can clean it up. */
+  private pendingGatewayClient: GatewayClientLike | null = null;
   private gatewayReadyPromise: Promise<void> | null = null;
   /** Serializes concurrent calls to ensureGatewayClientReady to prevent duplicate clients. */
   private gatewayClientInitLock: Promise<void> | null = null;
@@ -1404,6 +1406,12 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       scopes: ['operator.admin'],
       onHelloOk: () => {
         console.log('[ChannelSync] GatewayClient: onHelloOk — handshake succeeded');
+        // Expose the client only after the connect handshake completes.
+        // Setting gatewayClient earlier would let concurrent code send
+        // request frames before the connect frame, causing 1008 rejection.
+        this.gatewayClient = client;
+        this.gatewayClientVersion = connection.version;
+        this.gatewayClientEntryPath = connection.clientEntryPath;
         settleResolve();
         this.lastTickTimestamp = Date.now();
         this.startTickWatchdog();
@@ -1415,6 +1423,10 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       onClose: (_code: number, reason: string) => {
         console.log('[ChannelSync] GatewayClient: onClose — code:', _code, 'reason:', reason, 'settled:', settled);
         if (!settled) {
+          // Handshake never completed — clean up the pending client so the next
+          // ensureGatewayClientReady call creates a fresh one instead of reusing
+          // this broken instance forever.
+          this.pendingGatewayClient = null;
           settleReject(new Error(reason || 'OpenClaw gateway disconnected before handshake'));
           return;
         }
@@ -1448,9 +1460,10 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       },
     });
 
-    this.gatewayClient = client;
-    this.gatewayClientVersion = connection.version;
-    this.gatewayClientEntryPath = connection.clientEntryPath;
+    // gatewayClient/version/entryPath are now set inside onHelloOk,
+    // after the connect handshake succeeds. We only keep a local ref
+    // for stopGatewayClient() cleanup if start() fails synchronously.
+    this.pendingGatewayClient = client;
     client.start();
   }
 
@@ -1459,12 +1472,15 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
     this.stopChannelPolling();
     this.cancelGatewayReconnect();
     this.stopTickWatchdog();
+    // Stop whichever client exists — the promoted one or the pending one.
+    const clientToStop = this.gatewayClient ?? this.pendingGatewayClient;
     try {
-      this.gatewayClient?.stop();
+      clientToStop?.stop();
     } catch (error) {
       console.warn('[OpenClawRuntime] Failed to stop gateway client:', error);
     }
     this.gatewayClient = null;
+    this.pendingGatewayClient = null;
     this.gatewayClientVersion = null;
     this.gatewayClientEntryPath = null;
     this.gatewayReadyPromise = null;
