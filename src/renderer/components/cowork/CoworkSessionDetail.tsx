@@ -40,7 +40,7 @@ interface CoworkSessionDetailProps {
 }
 
 const AUTO_SCROLL_THRESHOLD = 120;
-const NAV_SCROLL_LOCK_DURATION = 500;
+const NAV_SCROLL_LOCK_DURATION = 800;
 const NAV_BOTTOM_SNAP_THRESHOLD = 20;
 const INVALID_FILE_NAME_PATTERN = /[<>:"/\\|?*\u0000-\u001F]/g;
 
@@ -1695,12 +1695,17 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     // If at very bottom, snap to last turn (use smaller threshold than auto-scroll)
     if (distanceToBottom <= NAV_BOTTOM_SNAP_THRESHOLD) {
       const lastIndex = turnEls.length - 1;
-      currentTurnIndexRef.current = lastIndex;
-      setCurrentTurnIndex(lastIndex);
-      // Snap rail to last item
-      const lastRail = Math.max(railItemCountRef.current - 1, 0);
-      currentRailIndexRef.current = lastRail;
-      setCurrentRailIndex(lastRail);
+      if (currentTurnIndexRef.current !== lastIndex) {
+        currentTurnIndexRef.current = lastIndex;
+        setCurrentTurnIndex(lastIndex);
+      }
+      // Snap rail to last item — use -1 when rail count is unknown (0),
+      // so the render fallback resolves to the last item
+      const lastRail = railItemCountRef.current > 0 ? railItemCountRef.current - 1 : -1;
+      if (currentRailIndexRef.current !== lastRail) {
+        currentRailIndexRef.current = lastRail;
+        setCurrentRailIndex(lastRail);
+      }
       return;
     }
 
@@ -1713,16 +1718,23 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
         break;
       }
     }
-    currentTurnIndexRef.current = visibleIndex;
-    setCurrentTurnIndex(visibleIndex);
+    if (currentTurnIndexRef.current !== visibleIndex) {
+      currentTurnIndexRef.current = visibleIndex;
+      setCurrentTurnIndex(visibleIndex);
+    }
 
     // Map scroll percentage to rail item index
     const maxScroll = container.scrollHeight - container.clientHeight;
     if (maxScroll > 0 && railItemCountRef.current > 0) {
       const scrollRatio = scrollTop / maxScroll;
-      const railIdx = Math.round(scrollRatio * (railItemCountRef.current - 1));
-      currentRailIndexRef.current = railIdx;
-      setCurrentRailIndex(railIdx);
+      const railIdx = Math.min(
+        Math.round(scrollRatio * (railItemCountRef.current - 1)),
+        railItemCountRef.current - 1
+      );
+      if (currentRailIndexRef.current !== railIdx) {
+        currentRailIndexRef.current = railIdx;
+        setCurrentRailIndex(railIdx);
+      }
     }
   }, []);
 
@@ -1797,22 +1809,36 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     );
   }, [turns]);
 
-  // Resolve uninitialized rail index (-1) to last item after render
+  // Sync rail index when turns change or rail first appears (isScrollable becomes true)
   useEffect(() => {
-    if (currentRailIndex < 0 && railItemCountRef.current > 0) {
-      const lastRail = railItemCountRef.current - 1;
-      currentRailIndexRef.current = lastRail;
-      setCurrentRailIndex(lastRail);
-    }
-  }, [currentRailIndex, turns]);
+    // After turns/scrollable change, if rail index is uninitialized (-1) or out of bounds,
+    // wait for next frame so render IIFE has updated railItemCountRef, then sync
+    const frameId = requestAnimationFrame(() => {
+      const count = railItemCountRef.current;
+      if (count === 0) return;
+      const idx = currentRailIndexRef.current;
+      if (idx < 0 || idx >= count) {
+        const resolved = count - 1;
+        currentRailIndexRef.current = resolved;
+        setCurrentRailIndex(resolved);
+      }
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [turns, isScrollable]);
 
-  // Scroll rail lines container to keep active item visible
+  // Scroll rail lines container to keep active item visible (without affecting page scroll)
   useEffect(() => {
     const container = railLinesRef.current;
     if (!container || currentRailIndex < 0) return;
     const activeEl = container.children[currentRailIndex] as HTMLElement | undefined;
-    if (activeEl) {
-      activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (!activeEl) return;
+    // Manual scroll calculation to avoid scrollIntoView bubbling to parent scrollable
+    const elTop = activeEl.offsetTop;
+    const elBottom = elTop + activeEl.offsetHeight;
+    if (elTop < container.scrollTop) {
+      container.scrollTop = elTop;
+    } else if (elBottom > container.scrollTop + container.clientHeight) {
+      container.scrollTop = elBottom - container.clientHeight;
     }
   }, [currentRailIndex]);
 
@@ -1831,9 +1857,11 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
       const lastIndex = turns.length - 1;
       currentTurnIndexRef.current = lastIndex;
       setCurrentTurnIndex(lastIndex);
-      // Set rail to -1 so it resolves to last item on next render
-      currentRailIndexRef.current = -1;
-      setCurrentRailIndex(-1);
+      // Snap rail to last item — use -1 when rail hasn't rendered yet (count is 0),
+      // so the render IIFE resolvedRailIndex fallback picks the last item
+      const lastRail = railItemCountRef.current > 0 ? railItemCountRef.current - 1 : -1;
+      currentRailIndexRef.current = lastRail;
+      setCurrentRailIndex(lastRail);
     }
   }, [currentSession?.messages?.length, lastMessageContent, isStreaming, shouldAutoScroll, turns.length]);
 
@@ -2111,8 +2139,8 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
             {/* Message Lines */}
             <div
               ref={railLinesRef}
-              className="overflow-hidden"
-              style={{ maxHeight: '60vh' }}
+              className="overflow-y-auto"
+              style={{ maxHeight: '60vh', scrollbarWidth: 'none' }}
             >
             {(() => {
               // Build flat list of messages with their content length and turn index
