@@ -1736,13 +1736,9 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
   const navigateToRailItem = useCallback((railIndex: number) => {
     if (railIndex < 0 || railIndex >= railItemCountRef.current) return;
 
-    isNavigatingRef.current = true;
-    if (navigatingTimerRef.current) clearTimeout(navigatingTimerRef.current);
-    navigatingTimerRef.current = setTimeout(() => { isNavigatingRef.current = false; }, NAV_SCROLL_LOCK_DURATION);
-
     // Find the turn that contains this rail item
     const ranges = turnToRailRangeRef.current;
-    let targetTurnIdx = 0;
+    let targetTurnIdx = -1;
     for (let t = 0; t < ranges.length; t++) {
       if (ranges[t] && railIndex >= ranges[t].first && railIndex <= ranges[t].last) {
         targetTurnIdx = t;
@@ -1750,13 +1746,17 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
       }
     }
 
+    isNavigatingRef.current = true;
+    if (navigatingTimerRef.current) clearTimeout(navigatingTimerRef.current);
+    navigatingTimerRef.current = setTimeout(() => { isNavigatingRef.current = false; }, NAV_SCROLL_LOCK_DURATION);
+
     // Try to scroll to the exact data-rail-index element if it's in the DOM
     const container = scrollContainerRef.current;
     if (container) {
       const el = container.querySelector<HTMLElement>(`[data-rail-index="${railIndex}"]`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
+      } else if (targetTurnIdx >= 0) {
         // Fallback: scroll to the turn element (always in DOM)
         const turnEls = turnElsCacheRef.current;
         if (targetTurnIdx < turnEls.length) {
@@ -1924,12 +1924,12 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
       return (
         <LazyRenderTurn key={turn.id} turnId={turn.id} alwaysRender={alwaysRender} data-turn-index={index}>
           {turn.userMessage && (
-            <div data-export-role="user-message" data-rail-index={userRailIdx}>
+            <div data-export-role="user-message" {...(userRailIdx >= 0 ? { 'data-rail-index': userRailIdx } : undefined)}>
               <UserMessageItem message={turn.userMessage} skills={skills} />
             </div>
           )}
           {showAssistantBlock && (
-            <div data-export-role="assistant-block" data-rail-index={asstRailIdx}>
+            <div data-export-role="assistant-block" {...(asstRailIdx >= 0 ? { 'data-rail-index': asstRailIdx } : undefined)}>
               <AssistantTurnBlock
                 turn={turn}
                 resolveLocalFilePath={resolveLocalFilePath}
@@ -2120,7 +2120,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
         <div
           ref={scrollContainerRef}
           onScroll={handleMessagesScroll}
-          className="h-full min-h-0 overflow-y-auto pt-3 pr-8"
+          className={`h-full min-h-0 overflow-y-auto pt-3 ${turns.length > 1 && isScrollable ? 'pr-8' : 'pr-3'}`}
         >
           {renderConversationTurns()}
           <div className="h-20" />
