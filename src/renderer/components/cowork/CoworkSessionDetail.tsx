@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { i18nService } from '../../services/i18n';
@@ -24,7 +25,6 @@ import EllipsisHorizontalIcon from '../icons/EllipsisHorizontalIcon';
 import PencilSquareIcon from '../icons/PencilSquareIcon';
 import TrashIcon from '../icons/TrashIcon';
 import WindowTitleBar from '../window/WindowTitleBar';
-import Tooltip from '../ui/Tooltip';
 import { getCompactFolderName } from '../../utils/path';
 import { getScheduledReminderDisplayText } from '../../../scheduled-task/reminderText';
 
@@ -1316,6 +1316,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
   const [hoveredRailIndex, setHoveredRailIndex] = useState<number | null>(null);
   const hoveredRailIndexRef = useRef<number | null>(null);
   const [isRailHovered, setIsRailHovered] = useState(false);
+  const [railTooltip, setRailTooltip] = useState<{ label: string; top: number; right: number; isUser: boolean } | null>(null);
 
   // Menu and action states
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
@@ -2063,6 +2064,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
               setIsRailHovered(false);
               hoveredRailIndexRef.current = null;
               setHoveredRailIndex(null);
+              setRailTooltip(null);
             }}
           >
             {/* Up Arrow */}
@@ -2094,7 +2096,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
               // Build flat list of messages with their content length and turn index
               const MIN_W = 6;  // px
               const MAX_W = 16; // px
-              type RailItem = { key: string; turnIndex: number; label: string; contentLen: number };
+              type RailItem = { key: string; turnIndex: number; label: string; contentLen: number; isUser: boolean };
               const items: RailItem[] = [];
               for (let i = 0; i < turns.length; i++) {
                 const turn = turns[i];
@@ -2105,6 +2107,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
                     turnIndex: i,
                     label: content.split('\n')[0].slice(0, 50) || `Turn ${i + 1}`,
                     contentLen: content.length,
+                    isUser: true,
                   });
                 }
                 // Aggregate all assistant content into one line per turn
@@ -2120,6 +2123,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
                     turnIndex: i,
                     label: asstContent.split('\n')[0].slice(0, 50),
                     contentLen: asstContent.length,
+                    isUser: false,
                   });
                 }
               }
@@ -2149,33 +2153,38 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
                 const ratio = msg.contentLen / maxLen;
                 const lineW = Math.round(MIN_W + ratio * (MAX_W - MIN_W));
                 return (
-                  <Tooltip
+                  <button
                     key={msg.key}
-                    position="left"
-                    delay={200}
-                    maxWidth="240px"
-                    content={msg.label}
+                    type="button"
+                    onClick={() => {
+                      currentRailIndexRef.current = idx;
+                      setCurrentRailIndex(idx);
+                      navigateToTurnByIndex(msg.turnIndex);
+                    }}
+                    onMouseEnter={(e) => {
+                      hoveredRailIndexRef.current = idx;
+                      setHoveredRailIndex(idx);
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const top = Math.max(8, Math.min(rect.top + rect.height / 2, window.innerHeight - 8));
+                      setRailTooltip({
+                        label: msg.label,
+                        top,
+                        right: window.innerWidth - rect.left + 8,
+                        isUser: msg.isUser,
+                      });
+                    }}
+                    onMouseLeave={() => setRailTooltip(null)}
+                    className="flex items-center justify-end cursor-pointer w-5 py-[5px]"
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        currentRailIndexRef.current = idx;
-                        setCurrentRailIndex(idx);
-                        navigateToTurnByIndex(msg.turnIndex);
-                      }}
-                      onMouseEnter={() => { hoveredRailIndexRef.current = idx; setHoveredRailIndex(idx); }}
-                      className="flex items-center justify-end cursor-pointer w-5 py-[5px]"
-                    >
-                      <div
-                        className={`h-[2px] rounded-full transition-all ${
-                          isActive || isHovered
-                            ? 'bg-neutral-800 dark:bg-neutral-200'
-                            : 'bg-neutral-300 dark:bg-neutral-600'
-                        }`}
-                        style={{ width: isActive || isHovered ? MAX_W : lineW }}
-                      />
-                    </button>
-                  </Tooltip>
+                    <div
+                      className={`h-[2px] rounded-full transition-all ${
+                        isActive || isHovered
+                          ? 'bg-neutral-800 dark:bg-neutral-200'
+                          : 'bg-neutral-300 dark:bg-neutral-600'
+                      }`}
+                      style={{ width: isActive || isHovered ? MAX_W : lineW }}
+                    />
+                  </button>
                 );
               });
             })()}
@@ -2204,6 +2213,43 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
               </svg>
             </button>
           </div>
+        )}
+
+        {/* Rail Tooltip — rendered via portal to escape transform context */}
+        {railTooltip && createPortal(
+          <div
+            className={`fixed z-[100] px-3.5 py-2 text-[13px] leading-snug pointer-events-none overflow-hidden
+              max-w-[240px] shadow-[0_2px_12px_rgba(0,0,0,0.12)]
+              border dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)]
+              ${railTooltip.isUser
+                ? 'rounded-[12px_12px_4px_12px] bg-white border-neutral-200/80 dark:bg-neutral-800 dark:border-neutral-700'
+                : 'rounded-xl bg-neutral-50 border-neutral-200/80 dark:bg-neutral-800 dark:border-neutral-700'
+              }`}
+            style={{
+              top: railTooltip.top,
+              right: railTooltip.right,
+              transform: 'translateY(-50%)',
+            }}
+          >
+            {!railTooltip.isUser && (
+              <div className="text-[12px] font-medium mb-0.5 text-neutral-800 dark:text-neutral-200">
+                LobsterAI:
+              </div>
+            )}
+            <div
+              className="text-neutral-600 dark:text-neutral-300"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                wordBreak: 'break-all',
+              }}
+            >
+              {railTooltip.label}
+            </div>
+          </div>,
+          document.body
         )}
       </div>
 
