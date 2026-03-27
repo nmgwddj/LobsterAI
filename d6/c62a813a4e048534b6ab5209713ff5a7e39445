@@ -1,0 +1,55 @@
+src/main/im/imGatewayManager.ts
+  926f9d3d2ac93ba9 3-4,148,170,364-368,370-374,461,718-722,779-783,853-855,869,873,897-899,945-947,978-980,1576,1607,1609-1610,1678-1681,1685,2178,2191,2204,2217
+src/renderer/components/agent/AgentSettingsPanel.tsx
+  926f9d3d2ac93ba9 22
+src/renderer/types/electron.d.ts
+  926f9d3d2ac93ba9 419-420,422,523,645,719,752,803,846
+src/renderer/components/im/IMSettings.tsx
+  926f9d3d2ac93ba9 12,30,414-416,776,809-810,842,949,996,2895,2905-2906,2909,2911,2915,2933-2935,2941,2944,2953,2955,2957,2964,2968,2970,2975,2977
+src/renderer/utils/regionFilter.ts
+  926f9d3d2ac93ba9 2
+src/renderer/services/i18n.ts
+  926f9d3d2ac93ba9 771,852,1936,2016
+src/main/im/imStore.ts
+  926f9d3d2ac93ba9 15,28,87,322-340,377-378,401-402,427-428,495,497-499,502-504,599,602
+src/renderer/services/im.ts
+  926f9d3d2ac93ba9 257
+src/main/libs/openclawConfigSync.ts
+  926f9d3d2ac93ba9 6,495,514,532,607-608,690,998-1006,1513
+src/renderer/store/slices/imSlice.ts
+  926f9d3d2ac93ba9 16,69-70,107
+src/renderer/types/im.ts
+  926f9d3d2ac93ba9 181,183,190,303,312,333,500,593,641
+src/renderer/components/scheduledTasks/TaskForm.tsx
+  926f9d3d2ac93ba9 70,424
+src/main/im/types.ts
+  926f9d3d2ac93ba9 180,182,184-185,189,302,311,332,506,599,642,698
+src/main/main.ts
+  926f9d3d2ac93ba9 102,838-844
+src/main/libs/openclawChannelSessionSync.ts
+  926f9d3d2ac93ba9 74
+src/main/preload.ts
+  926f9d3d2ac93ba9 331-332,334
+package.json
+  926f9d3d2ac93ba9 50-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "d6c62a813a4e048534b6ab5209713ff5a7e39445",
+  "prompts": {
+    "926f9d3d2ac93ba9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "79b0b5c3-62d3-4b24-8682-220515b0f6ab",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dylan <2894220@gmail.com>",
+      "messages": [],
+      "total_additions": 196,
+      "total_deletions": 191,
+      "accepted_lines": 196,
+      "overriden_lines": 0
+    }
+  }
+}
