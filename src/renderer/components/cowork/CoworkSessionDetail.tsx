@@ -26,7 +26,7 @@ import PencilSquareIcon from '../icons/PencilSquareIcon';
 import TrashIcon from '../icons/TrashIcon';
 import WindowTitleBar from '../window/WindowTitleBar';
 import { getCompactFolderName } from '../../utils/path';
-import { getScheduledReminderDisplayText } from '../../../scheduled-task/reminderText';
+import { getScheduledReminderDisplayText } from '../../../scheduledTask/reminderText';
 
 interface CoworkSessionDetailProps {
   onManageSkills?: () => void;

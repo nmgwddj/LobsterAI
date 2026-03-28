@@ -6,7 +6,7 @@ import type {
   ScheduledTaskChannelOption,
   ScheduledTaskConversationOption,
   ScheduledTaskInput,
-} from '../../../scheduled-task/types';
+} from '../../../scheduledTask/types';
 import { formatScheduleLabel, type PlanType, scheduleToPlanInfo } from './utils';
 import { PlatformRegistry } from '@shared/platform';
 
