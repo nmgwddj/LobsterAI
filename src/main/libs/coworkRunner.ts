@@ -13,7 +13,7 @@ import { coworkLog, getCoworkLogPath } from './coworkLogger';
 import { ensurePythonPipReady, ensurePythonRuntimeReady } from './pythonRuntime';
 import { isQuestionLikeMemoryText, type CoworkMemoryGuardLevel } from './coworkMemoryExtractor';
 import { setCoworkProxySessionId } from './coworkOpenAICompatProxy';
-import { SCHEDULED_TASK_SWITCH_MESSAGE } from '../../scheduled-task/enginePrompt';
+import { SCHEDULED_TASK_SWITCH_MESSAGE } from '../../scheduledTask/enginePrompt';
 import { z } from 'zod';
 
 const ATTACHMENT_LINE_RE = /^\s*(?:[-*]\s*)?(输入文件|input\s*file)\s*[:：]\s*(.+?)\s*$/i;

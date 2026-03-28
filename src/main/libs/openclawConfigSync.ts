@@ -10,7 +10,7 @@ import type { OpenClawEngineManager } from './openclawEngineManager';
 import { parseChannelSessionKey } from './openclawChannelSessionSync';
 import type { McpToolManifestEntry } from './mcpServerManager';
 import { hasBundledOpenClawExtension } from './openclawLocalExtensions';
-import { buildScheduledTaskEnginePrompt } from '../../scheduled-task/enginePrompt';
+import { buildScheduledTaskEnginePrompt } from '../../scheduledTask/enginePrompt';
 
 export type McpBridgeConfig = {
   callbackUrl: string;

@@ -19,7 +19,7 @@ import {
   type IMScheduledTaskRequestDetector,
   type ParsedIMScheduledTaskRequest,
 } from './imScheduledTaskHandler';
-import { buildScheduledTaskEnginePrompt } from '../../scheduled-task/enginePrompt';
+import { buildScheduledTaskEnginePrompt } from '../../scheduledTask/enginePrompt';
 import { t } from '../i18n';
 
 interface MessageAccumulator {

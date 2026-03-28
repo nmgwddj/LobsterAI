@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IpcChannel as ScheduledTaskIpc } from '../scheduled-task/constants';
+import { IpcChannel as ScheduledTaskIpc } from '../scheduledTask/constants';
 import type { Platform } from '../shared/platform';
 
 // 暴露安全的 API 到渲染进程
