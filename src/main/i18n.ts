@@ -165,7 +165,7 @@ const translations: Record<LanguageType, Record<string, string>> = {
     imNimP2pOnlySuggestion: '请通过私聊方式向机器人账号发送消息触发对话。',
 
     // Xiaomifeng
-    imXiaomifengConfigReady: '小蜜蜂配置已就绪（Client ID: {clientId}）。',
+    imNeteaseBeeConfigReady: '小蜜蜂配置已就绪（Client ID: {clientId}）。',
 
     // POPO
     imPopoFillWebhookCredentials: '请补全 appKey、appSecret、token 和 aesKey 后重新测试连通性。',
@@ -323,8 +323,8 @@ const translations: Record<LanguageType, Record<string, string>> = {
     imNimP2pOnly: 'NIM currently only supports P2P (direct) messages.',
     imNimP2pOnlySuggestion: 'Please send a direct message to the bot account to start a conversation.',
 
-    // Xiaomifeng
-    imXiaomifengConfigReady: 'Xiaomifeng configuration is ready (Client ID: {clientId}).',
+    // Netease Bee
+    imNeteaseBeeConfigReady: 'Netease Bee configuration is ready (Client ID: {clientId}).',
 
     // POPO
     imPopoFillWebhookCredentials: 'Please provide the appKey, appSecret, token, and aesKey and test connectivity again.',

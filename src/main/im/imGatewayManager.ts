@@ -458,7 +458,17 @@ export class IMGatewayManager extends EventEmitter {
           lastOutboundAt: null as number | null,
         };
       })(),
-      'netease-bee': { connected: false, startedAt: null, lastError: null, botAccount: null, lastInboundAt: null, lastOutboundAt: null },
+      'netease-bee': (() => {
+        const beeConfig = config['netease-bee'];
+        return {
+          connected: Boolean(beeConfig?.enabled && beeConfig?.clientId && beeConfig?.secret),
+          startedAt: null as number | null,
+          lastError: null as string | null,
+          botAccount: null as string | null,
+          lastInboundAt: null as number | null,
+          lastOutboundAt: null as number | null,
+        };
+      })(),
       wecom: {
         connected: Boolean(config.wecom?.enabled && config.wecom.botId && config.wecom.secret),
         startedAt: null as number | null,
@@ -718,6 +728,7 @@ export class IMGatewayManager extends EventEmitter {
     } else if (platform === 'netease-bee') {
       // netease-bee runs via OpenClaw gateway
       console.log('[IMGatewayManager] netease-bee in OpenClaw mode, syncing config instead of starting direct gateway');
+      await this.syncOpenClawConfig?.();
       await this.ensureOpenClawGatewayConnected?.();
       return;
     } else if (platform === 'qq') {
@@ -1683,7 +1694,7 @@ export class IMGatewayManager extends EventEmitter {
       if (!clientId || !secret) {
         throw new Error(t('imConfigIncomplete'));
       }
-      return `网易小蜜蜂配置已就绪（Client ID: ${clientId}），通过 OpenClaw 运行。`;
+      return t('imNeteaseBeeConfigReady', { clientId });
     }
 
     if (platform === 'wecom') {
