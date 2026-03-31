@@ -47,7 +47,7 @@ const AllRunsHistory: React.FC = () => {
   return (
     <div>
       {/* Column Headers */}
-      <div className="grid grid-cols-[1fr_1fr_80px] items-center gap-3 px-4 py-2 border-b border-border/50">
+      <div className="grid grid-cols-[1fr_1fr_80px] items-center gap-3 px-4 py-2 border-b border-border-subtle">
         <div className="text-xs font-medium text-secondary">
           {i18nService.t('scheduledTasksHistoryColTitle')}
         </div>
@@ -66,7 +66,7 @@ const AllRunsHistory: React.FC = () => {
         return (
           <div
             key={run.id}
-            className={`grid grid-cols-[1fr_1fr_80px] items-center gap-3 px-4 py-3 border-b border-border/50 transition-colors ${
+            className={`grid grid-cols-[1fr_1fr_80px] items-center gap-3 px-4 py-3 border-b border-border-subtle transition-colors ${
               hasSession
                 ? 'hover:bg-surface-raised/50 cursor-pointer'
                 : ''

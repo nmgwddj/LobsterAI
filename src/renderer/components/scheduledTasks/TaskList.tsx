@@ -35,7 +35,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({ task, onRequestDelete }) =>
 
   return (
     <div
-      className="grid grid-cols-[1.2fr_1fr_110px_40px] items-center gap-3 px-4 py-3 border-b border-border/50 hover:bg-surface-raised/50 cursor-pointer transition-colors"
+      className="grid grid-cols-[1.2fr_1fr_110px_40px] items-center gap-3 px-4 py-3 border-b border-border-subtle hover:bg-surface-raised/50 cursor-pointer transition-colors"
       onClick={() => dispatch(selectTask(task.id))}
     >
       <div className="min-w-0">
@@ -164,7 +164,7 @@ const TaskList: React.FC<TaskListProps> = ({ onRequestDelete }) => {
 
   return (
     <div>
-      <div className="grid grid-cols-[1.2fr_1fr_110px_40px] items-center gap-3 px-4 py-2 border-b/50 border-border/50">
+      <div className="grid grid-cols-[1.2fr_1fr_110px_40px] items-center gap-3 px-4 py-2 border-b border-border-subtle">
         <div className="text-xs font-medium text-secondary">
           {i18nService.t('scheduledTasksListColTitle')}
         </div>

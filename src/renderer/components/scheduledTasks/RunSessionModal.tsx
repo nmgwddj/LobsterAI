@@ -144,7 +144,7 @@ const RunSessionModal: React.FC<RunSessionModalProps> = ({ sessionId, sessionKey
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 bg-surface/50 shrink-0">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border-subtle bg-surface/50 shrink-0">
           <h3 className="text-sm font-semibold text-foreground truncate">
             {session?.title || i18nService.t('scheduledTasksViewSession')}
           </h3>
