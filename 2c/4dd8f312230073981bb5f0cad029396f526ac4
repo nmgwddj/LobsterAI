@@ -1,0 +1,23 @@
+src/main/libs/enterpriseConfigSync.ts
+  c069bb47313793b4 240
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "2c4dd8f312230073981bb5f0cad029396f526ac4",
+  "prompts": {
+    "c069bb47313793b4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03833e47-5c4b-4a27-99e0-2c4423d02a34",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
