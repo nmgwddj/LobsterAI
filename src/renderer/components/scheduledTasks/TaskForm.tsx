@@ -13,18 +13,12 @@ import type {
 import { formatScheduleLabel, type PlanType, scheduleToPlanInfo } from './utils';
 import { PlatformRegistry } from '@shared/platform';
 import ModelSelector from '../ModelSelector';
+import { ProviderRegistry, OpenClawProviderId } from '@shared/providers/constants';
 
-/**
- * Build the OpenClaw-compatible model reference (provider/modelId) for a given
- * UI model.  Must mirror the providerId mapping in openclawConfigSync's
- * `buildProviderSelection` so that `resolveAllowedModelRef` can resolve it.
- */
 function toOpenClawModelRef(model: { id: string; providerKey?: string; isServerModel?: boolean }): string {
-  if (model.isServerModel) return `lobsterai-server/${model.id}`;
-  const key = model.providerKey ?? '';
-  if (key === 'moonshot') return `moonshot/${model.id}`;
-  if (key === 'lobsterai-server') return `lobsterai-server/${model.id}`;
-  return `lobster/${model.id}`;
+  if (model.isServerModel) return `${OpenClawProviderId.LobsteraiServer}/${model.id}`;
+  const openClawId = ProviderRegistry.getOpenClawProviderId(model.providerKey ?? '');
+  return `${openClawId}/${model.id}`;
 }
 
 interface TaskFormProps {
