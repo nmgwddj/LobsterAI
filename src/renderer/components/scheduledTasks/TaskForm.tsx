@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import { scheduledTaskService } from '../../services/scheduledTask';
 import { i18nService } from '../../services/i18n';
+import type { Model } from '../../store/slices/modelSlice';
 import type {
   ScheduledTask,
   ScheduledTaskChannelOption,
@@ -9,6 +12,20 @@ import type {
 } from '../../../scheduledTask/types';
 import { formatScheduleLabel, type PlanType, scheduleToPlanInfo } from './utils';
 import { PlatformRegistry } from '@shared/platform';
+import ModelSelector from '../ModelSelector';
+
+/**
+ * Build the OpenClaw-compatible model reference (provider/modelId) for a given
+ * UI model.  Must mirror the providerId mapping in openclawConfigSync's
+ * `buildProviderSelection` so that `resolveAllowedModelRef` can resolve it.
+ */
+function toOpenClawModelRef(model: { id: string; providerKey?: string; isServerModel?: boolean }): string {
+  if (model.isServerModel) return `lobsterai-server/${model.id}`;
+  const key = model.providerKey ?? '';
+  if (key === 'moonshot') return `moonshot/${model.id}`;
+  if (key === 'lobsterai-server') return `lobsterai-server/${model.id}`;
+  return `lobster/${model.id}`;
+}
 
 interface TaskFormProps {
   mode: 'create' | 'edit';
@@ -32,6 +49,7 @@ interface FormState {
   payloadText: string;
   notifyChannel: string;
   notifyTo: string;
+  modelId: string;
 }
 
 function nowDefaults() {
@@ -56,6 +74,7 @@ const DEFAULT_FORM_STATE: FormState = {
   payloadText: '',
   notifyChannel: 'none',
   notifyTo: '',
+  modelId: '',
 };
 
 function isIMChannel(channel: string): boolean {
@@ -81,6 +100,7 @@ function createFormState(task?: ScheduledTask): FormState {
     payloadText: task.payload.kind === 'systemEvent' ? task.payload.text : task.payload.message,
     notifyChannel: task.delivery.channel || 'none',
     notifyTo: task.delivery.to || '',
+    modelId: task.payload.kind === 'agentTurn' ? (task.payload.model ?? '') : '',
   };
 }
 
@@ -116,6 +136,7 @@ const WEEKDAY_KEYS = [
 
 const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) => {
   const [form, setForm] = useState<FormState>(() => createFormState(task));
+  const availableModels = useSelector((state: RootState) => state.model.availableModels);
   const [channelOptions, setChannelOptions] = useState<ScheduledTaskChannelOption[]>(() => {
     const base: ScheduledTaskChannelOption[] = [];
     const savedChannel = task?.delivery.channel;
@@ -228,6 +249,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) =>
         payload: {
           kind: 'agentTurn',
           message: form.payloadText.trim(),
+          ...(form.modelId ? { model: form.modelId } : {}),
         },
         delivery: form.notifyChannel === 'none'
           ? { mode: 'none' }
@@ -252,9 +274,18 @@ const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) =>
     }
   };
 
-  const inputClass = 'w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50';
-  const labelClass = 'block text-sm font-medium text-foreground mb-1';
+  const inputClass = 'w-full rounded-lg border dark:border-claude-darkBorder border-claude-border dark:bg-claude-darkSurface bg-white px-3 py-2 text-sm dark:text-claude-darkText text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent/50';
+  const textareaInputClass = 'w-full rounded-t-lg px-3 py-2 text-sm dark:text-claude-darkText text-claude-text focus:outline-none resize-none bg-transparent';
+  const labelClass = 'block text-sm font-medium dark:text-claude-darkText text-claude-text mb-1';
   const errorClass = 'text-xs text-red-500 mt-1';
+
+  const selectedModelValue: Model | null = form.modelId
+    ? availableModels.find((m) => toOpenClawModelRef(m) === form.modelId) ?? null
+    : null;
+
+  const handleModelChange = (model: Model | null) => {
+    updateForm({ modelId: model ? toOpenClawModelRef(model) : '' });
+  };
 
   const timeValue = `${String(form.hour).padStart(2, '0')}:${String(form.minute).padStart(2, '0')}`;
   const handleTimeChange = (value: string) => {
@@ -469,12 +500,23 @@ const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) =>
         <label className={labelClass}>
           {i18nService.t('scheduledTasksFormPayloadTextAgent')}
         </label>
-        <textarea
-          value={form.payloadText}
-          onChange={(event) => updateForm({ payloadText: event.target.value })}
-          className={`${inputClass} h-28 resize-none`}
-          placeholder={i18nService.t('scheduledTasksFormPromptPlaceholder')}
-        />
+        <div className="rounded-lg border dark:border-claude-darkBorder border-claude-border dark:bg-claude-darkSurface bg-white focus-within:ring-1 focus-within:ring-claude-accent/40 focus-within:border-claude-accent">
+          <textarea
+            value={form.payloadText}
+            onChange={(event) => updateForm({ payloadText: event.target.value })}
+            className={textareaInputClass}
+            placeholder={i18nService.t('scheduledTasksFormPromptPlaceholder')}
+            rows={4}
+          />
+          <div className="flex items-center px-2 py-1">
+            <ModelSelector
+              dropdownDirection="up"
+              value={selectedModelValue}
+              onChange={handleModelChange}
+              defaultLabel={i18nService.t('scheduledTasksFormModelDefault')}
+            />
+          </div>
+        </div>
         {errors.payloadText && <p className={errorClass}>{errors.payloadText}</p>}
       </div>
 
