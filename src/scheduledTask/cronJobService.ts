@@ -215,6 +215,7 @@ function toGatewayPayload(payload: ScheduledTaskPayload): GatewayPayload {
     ...(typeof payload.timeoutSeconds === 'number'
       ? { timeoutSeconds: payload.timeoutSeconds }
       : {}),
+    ...(payload.model ? { model: payload.model } : {}),
   };
 }
 
@@ -326,6 +327,7 @@ export function mapGatewayJob(job: GatewayJob): ScheduledTask {
           ...(typeof job.payload.timeoutSeconds === 'number'
             ? { timeoutSeconds: job.payload.timeoutSeconds }
             : {}),
+          ...(job.payload.model ? { model: job.payload.model } : {}),
         },
     delivery: {
       mode: delivery.mode,
