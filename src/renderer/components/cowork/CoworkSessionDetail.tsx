@@ -27,6 +27,7 @@ import TrashIcon from '../icons/TrashIcon';
 import WindowTitleBar from '../window/WindowTitleBar';
 import { getCompactFolderName } from '../../utils/path';
 import { getScheduledReminderDisplayText } from '../../../scheduledTask/reminderText';
+import DiffView, { extractDiffFromToolInput } from './DiffView';
 
 interface CoworkSessionDetailProps {
   onManageSkills?: () => void;
@@ -700,6 +701,13 @@ const ToolCallGroup: React.FC<{
   // Check if this is a Bash-like tool that should show terminal style
   const isBashTool = isBashLikeToolName(rawToolName);
 
+  // Check if this is an Edit/MultiEdit tool with diff data
+  const diffDataList = useMemo(
+    () => extractDiffFromToolInput(rawToolName, toolInput as Record<string, unknown> | undefined),
+    [rawToolName, toolInput],
+  );
+  const isEditWithDiff = diffDataList !== null && diffDataList.length > 0;
+
   return (
     <div className="relative py-1">
       {/* Vertical connecting line to next tool group */}
@@ -788,6 +796,36 @@ const ToolCallGroup: React.FC<{
             </div>
           ) : isTodoWriteTool && todoItems ? (
             <TodoWriteInputView items={todoItems} />
+          ) : isEditWithDiff && diffDataList ? (
+            // Diff view for Edit/MultiEdit tools
+            <div className="space-y-2">
+              {diffDataList.map((diff, idx) => (
+                <DiffView
+                  key={idx}
+                  oldStr={diff.oldStr}
+                  newStr={diff.newStr}
+                  filePath={diff.filePath}
+                />
+              ))}
+              {toolResult && (hasToolResultText || showNoDetailError) && (
+                <div>
+                  <div className="text-[10px] font-medium dark:text-claude-darkTextSecondary/70 text-claude-textSecondary/70 uppercase tracking-wider mb-1">
+                    {i18nService.t('coworkToolResult')}
+                  </div>
+                  <div className="max-h-32 overflow-y-auto">
+                    <pre className={`text-xs whitespace-pre-wrap break-words font-mono ${
+                      isToolError
+                        ? 'text-red-500'
+                        : hasToolResultText
+                          ? 'dark:text-claude-darkText text-claude-text'
+                          : 'dark:text-claude-darkTextSecondary text-claude-textSecondary italic'
+                    }`}>
+                      {displayToolResult}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             // Standard display for other tools with input/output labels
             <div className="space-y-2">
