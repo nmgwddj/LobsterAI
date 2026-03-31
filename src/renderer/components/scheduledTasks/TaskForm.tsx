@@ -44,7 +44,7 @@ interface FormState {
   hour: number;
   minute: number;
   second: number;
-  weekday: number;
+  weekdays: number[];
   monthDay: number;
   payloadText: string;
   notifyChannel: string;
@@ -69,7 +69,7 @@ const DEFAULT_FORM_STATE: FormState = {
   description: '',
   planType: 'daily',
   ...nowDefaults(),
-  weekday: 1,
+  weekdays: [1, 2, 3, 4, 5],
   monthDay: 1,
   payloadText: '',
   notifyChannel: 'none',
@@ -95,7 +95,7 @@ function createFormState(task?: ScheduledTask): FormState {
     hour: planInfo.hour,
     minute: planInfo.minute,
     second: planInfo.second,
-    weekday: planInfo.weekday,
+    weekdays: planInfo.weekdays,
     monthDay: planInfo.monthDay,
     payloadText: task.payload.kind === 'systemEvent' ? task.payload.text : task.payload.message,
     notifyChannel: task.delivery.channel || 'none',
@@ -113,26 +113,21 @@ function buildScheduleInput(form: FormState): ScheduledTaskInput['schedule'] {
   const min = String(form.minute);
   const hr = String(form.hour);
 
+  if (form.planType === 'hourly') {
+    return { kind: 'cron', expr: `${min} * * * *` };
+  }
+
   if (form.planType === 'daily') {
     return { kind: 'cron', expr: `${min} ${hr} * * *` };
   }
 
   if (form.planType === 'weekly') {
-    return { kind: 'cron', expr: `${min} ${hr} * * ${form.weekday}` };
+    const dowField = [...form.weekdays].sort((a, b) => a - b).join(',');
+    return { kind: 'cron', expr: `${min} ${hr} * * ${dowField}` };
   }
 
   return { kind: 'cron', expr: `${min} ${hr} ${form.monthDay} * *` };
 }
-
-const WEEKDAY_KEYS = [
-  'scheduledTasksFormWeekSun',
-  'scheduledTasksFormWeekMon',
-  'scheduledTasksFormWeekTue',
-  'scheduledTasksFormWeekWed',
-  'scheduledTasksFormWeekThu',
-  'scheduledTasksFormWeekFri',
-  'scheduledTasksFormWeekSat',
-] as const;
 
 const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) => {
   const [form, setForm] = useState<FormState>(() => createFormState(task));
@@ -222,6 +217,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) =>
 
     if (!isAdvanced && (form.hour < 0 || form.hour > 23 || form.minute < 0 || form.minute > 59)) {
       nextErrors.schedule = i18nService.t('scheduledTasksFormValidationTimeRequired');
+    }
+
+    if (form.planType === 'weekly' && form.weekdays.length === 0) {
+      nextErrors.schedule = i18nService.t('scheduledTasksFormValidationWeekdayRequired');
     }
 
     setErrors(nextErrors);
@@ -316,6 +315,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) =>
         className={`${inputClass} flex-1 min-w-0`}
       >
         <option value="once">{i18nService.t('scheduledTasksFormScheduleModeOnce')}</option>
+        <option value="hourly">{i18nService.t('scheduledTasksFormScheduleModeHourly')}</option>
         <option value="daily">{i18nService.t('scheduledTasksFormScheduleModeDaily')}</option>
         <option value="weekly">{i18nService.t('scheduledTasksFormScheduleModeWeekly')}</option>
         <option value="monthly">{i18nService.t('scheduledTasksFormScheduleModeMonthly')}</option>
@@ -375,27 +375,90 @@ const TaskForm: React.FC<TaskFormProps> = ({ mode, task, onCancel, onSaved }) =>
       );
     }
 
-    if (form.planType === 'weekly') {
+    if (form.planType === 'hourly') {
       return (
         <div>
           <label className={labelClass}>{i18nService.t('scheduledTasksFormScheduleType')}</label>
           <div className="flex items-center gap-3">
             {planSelect}
             <select
-              value={form.weekday}
-              onChange={(e) => updateForm({ weekday: Number(e.target.value) })}
-              className={`${inputClass} flex-1 min-w-0`}
+              value={form.minute}
+              onChange={(e) => updateForm({ minute: Number(e.target.value) })}
+              className="w-20 shrink-0 rounded-lg border dark:border-claude-darkBorder border-claude-border dark:bg-claude-darkSurface bg-white px-3 py-2 text-sm dark:text-claude-darkText text-claude-text text-center focus:outline-none focus:ring-2 focus:ring-claude-accent/50"
             >
-              {WEEKDAY_KEYS.map((key, idx) => (
-                <option key={idx} value={idx}>{i18nService.t(key)}</option>
+              {Array.from({ length: 60 }, (_, i) => (
+                <option key={i} value={i}>{String(i).padStart(2, '0')}</option>
               ))}
             </select>
+            <span className="shrink-0 text-sm dark:text-claude-darkTextSecondary text-claude-textSecondary">{i18nService.t('scheduledTasksFormHourlyMinuteSuffix')}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (form.planType === 'weekly') {
+      // Locale-aware weekday order:
+      // zh: Mon(1)→Sun(0) — Chinese convention starts with Monday
+      // en: Sun(0)→Sat(6) — English convention starts with Sunday
+      const WEEKDAY_SHORT_LABELS: [string, number][] =
+        i18nService.getLanguage() === 'zh'
+          ? [
+              ['scheduledTasksFormWeekShortMon', 1],
+              ['scheduledTasksFormWeekShortTue', 2],
+              ['scheduledTasksFormWeekShortWed', 3],
+              ['scheduledTasksFormWeekShortThu', 4],
+              ['scheduledTasksFormWeekShortFri', 5],
+              ['scheduledTasksFormWeekShortSat', 6],
+              ['scheduledTasksFormWeekShortSun', 0],
+            ]
+          : [
+              ['scheduledTasksFormWeekShortSun', 0],
+              ['scheduledTasksFormWeekShortMon', 1],
+              ['scheduledTasksFormWeekShortTue', 2],
+              ['scheduledTasksFormWeekShortWed', 3],
+              ['scheduledTasksFormWeekShortThu', 4],
+              ['scheduledTasksFormWeekShortFri', 5],
+              ['scheduledTasksFormWeekShortSat', 6],
+            ];
+
+      const toggleWeekday = (day: number) => {
+        const current = form.weekdays;
+        const next = current.includes(day)
+          ? current.filter((d) => d !== day)
+          : [...current, day];
+        updateForm({ weekdays: next });
+      };
+
+      return (
+        <div>
+          <label className={labelClass}>{i18nService.t('scheduledTasksFormScheduleType')}</label>
+          <div className="flex items-center gap-3">
+            {planSelect}
             <input
               type="time"
               value={timeValue}
               onChange={(e) => handleTimeChange(e.target.value)}
               className={`${inputClass} flex-1 min-w-0`}
             />
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            {WEEKDAY_SHORT_LABELS.map(([key, dayValue]) => {
+              const selected = form.weekdays.includes(dayValue);
+              return (
+                <button
+                  key={dayValue}
+                  type="button"
+                  onClick={() => toggleWeekday(dayValue)}
+                  className={`w-9 h-9 rounded-full text-sm font-medium transition-colors ${
+                    selected
+                      ? 'bg-claude-text dark:bg-claude-darkText text-white dark:text-claude-darkBg'
+                      : 'border dark:border-claude-darkBorder border-claude-border dark:text-claude-darkTextSecondary text-claude-textSecondary hover:bg-claude-surfaceHover dark:hover:bg-claude-darkSurfaceHover'
+                  }`}
+                >
+                  {i18nService.t(key)}
+                </button>
+              );
+            })}
           </div>
         </div>
       );
