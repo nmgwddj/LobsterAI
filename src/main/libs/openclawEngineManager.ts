@@ -302,6 +302,14 @@ export class OpenClawEngineManager extends EventEmitter {
   }
 
   async startGateway(): Promise<OpenClawEngineStatus> {
+    // 打印调用栈，一行一行的打印，不要按错误方式打印
+    console.log('[OpenClaw] startGateway called, stack trace:');
+    const stack = new Error().stack;
+    if (stack) {
+      stack.split('\n').slice(1).forEach((line) => {
+        console.log('\t', line.trim());
+      });
+    }
     if (this.startGatewayPromise) {
       console.log('[OpenClaw] startGateway: already in progress, reusing existing promise');
       return this.startGatewayPromise;
