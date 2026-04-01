@@ -1,0 +1,23 @@
+src/renderer/components/cowork/EngineStartupOverlay.tsx
+  aff1caf7d616e443 59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "cabfdbd99ee2db3735e2398715ac9500dc6d25c6",
+  "prompts": {
+    "aff1caf7d616e443": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2bd1d9259fferzbWNluSRkQB9b-d1ca2733-f6c4-44cc-81a0-8fb10efd5d3a",
+        "model": "unknown"
+      },
+      "human_author": "Dylan <2894220@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
