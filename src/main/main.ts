@@ -917,6 +917,7 @@ const scheduleDeferredGatewayRestart = (reason: string) => {
 const syncOpenClawConfig = async (
   options: { reason: string; restartGatewayIfRunning?: boolean } = { reason: 'unknown' },
 ): Promise<{ success: boolean; changed: boolean; status?: OpenClawEngineStatus; error?: string }> => {
+  console.log(`[OpenClaw] syncOpenClawConfig: called (reason: ${options.reason}, restartGatewayIfRunning: ${options.restartGatewayIfRunning ? 'yes' : 'no'})`);
   // When the gateway is running and there are active workloads (cowork
   // sessions OR running cron jobs), defer the entire sync — including the
   // config file write — to avoid triggering OpenClaw's built-in file-watcher
