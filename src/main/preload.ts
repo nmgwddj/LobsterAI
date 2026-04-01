@@ -356,6 +356,24 @@ contextBridge.exposeInMainWorld('electron', {
     approvePairingCode: (platform: string, code: string) => ipcRenderer.invoke('im:pairing:approve', platform, code),
     rejectPairingRequest: (platform: string, code: string) => ipcRenderer.invoke('im:pairing:reject', platform, code),
 
+    // DingTalk Multi-Instance
+    addDingTalkInstance: (name: string) => ipcRenderer.invoke('im:dingtalk:instance:add', name),
+    deleteDingTalkInstance: (instanceId: string) => ipcRenderer.invoke('im:dingtalk:instance:delete', instanceId),
+    setDingTalkInstanceConfig: (instanceId: string, config: any, options?: { syncGateway?: boolean }) =>
+      ipcRenderer.invoke('im:dingtalk:instance:config:set', instanceId, config, options),
+
+    // QQ Multi-Instance
+    addQQInstance: (name: string) => ipcRenderer.invoke('im:qq:instance:add', name),
+    deleteQQInstance: (instanceId: string) => ipcRenderer.invoke('im:qq:instance:delete', instanceId),
+    setQQInstanceConfig: (instanceId: string, config: any, options?: { syncGateway?: boolean }) =>
+      ipcRenderer.invoke('im:qq:instance:config:set', instanceId, config, options),
+
+    // Feishu Multi-Instance
+    addFeishuInstance: (name: string) => ipcRenderer.invoke('im:feishu:instance:add', name),
+    deleteFeishuInstance: (instanceId: string) => ipcRenderer.invoke('im:feishu:instance:delete', instanceId),
+    setFeishuInstanceConfig: (instanceId: string, config: any, options?: { syncGateway?: boolean }) =>
+      ipcRenderer.invoke('im:feishu:instance:config:set', instanceId, config, options),
+
     // Event listeners
     onStatusChange: (callback: (status: any) => void) => {
       const handler = (_event: any, status: any) => callback(status);

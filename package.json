@@ -14,7 +14,7 @@
       {
         "id": "dingtalk",
         "npm": "@soimy/dingtalk",
-        "version": "3.3.0"
+        "version": "3.4.0"
       },
       {
         "id": "feishu-openclaw-plugin",
@@ -23,8 +23,8 @@
       },
       {
         "id": "qqbot",
-        "npm": "@sliverp/qqbot",
-        "version": "1.5.3"
+        "npm": "@tencent-connect/openclaw-qqbot",
+        "version": "1.6.4"
       },
       {
         "id": "wecom-openclaw-plugin",

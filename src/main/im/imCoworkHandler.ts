@@ -323,7 +323,8 @@ export class IMCoworkHandler extends EventEmitter {
       throw new Error(`IM 工作目录不存在或无效: ${resolvedWorkspaceRoot}`);
     }
 
-    // Resolve the agent bound to this platform
+    // Resolve the agent bound to this platform (single-instance platforms only;
+    // multi-instance platforms route through OpenClaw channel session sync)
     const imSettings = this.imStore.getIMSettings();
     const agentId = imSettings.platformAgentBindings?.[platform] || 'main';
 

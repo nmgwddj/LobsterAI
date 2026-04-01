@@ -776,25 +776,25 @@ const getOpenClawConfigSync = (): OpenClawConfigSync => {
           return null;
         }
       },
-      getDingTalkConfig: () => {
+      getDingTalkInstances: () => {
         try {
-          return getIMGatewayManager().getConfig().dingtalk;
+          return getIMGatewayManager().getIMStore().getDingTalkInstances();
         } catch {
-          return null;
+          return [];
         }
       },
-      getFeishuConfig: () => {
+      getFeishuInstances: () => {
         try {
-          return getIMGatewayManager().getConfig().feishu;
+          return getIMGatewayManager().getIMStore().getFeishuInstances();
         } catch {
-          return null;
+          return [];
         }
       },
-      getQQConfig: () => {
+      getQQInstances: () => {
         try {
-          return getIMGatewayManager().getConfig().qq;
+          return getIMGatewayManager().getIMStore().getQQInstances();
         } catch {
-          return null;
+          return [];
         }
       },
       getWecomConfig: () => {
@@ -3515,6 +3515,156 @@ if (!gotTheLock) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to reject pairing request',
+      };
+    }
+  });
+
+  // DingTalk Multi-Instance handlers
+  ipcMain.handle('im:dingtalk:instance:add', async (_event, name: string) => {
+    try {
+      const instanceId = crypto.randomUUID();
+      const { DEFAULT_DINGTALK_OPENCLAW_CONFIG: defaults } = await import('./im/types');
+      const instance = {
+        ...defaults,
+        instanceId,
+        instanceName: name || 'DingTalk Bot',
+      };
+      getIMGatewayManager().getIMStore().setDingTalkInstanceConfig(instanceId, instance);
+      return { success: true, instance };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to add DingTalk instance',
+      };
+    }
+  });
+
+  ipcMain.handle('im:dingtalk:instance:delete', async (_event, instanceId: string) => {
+    try {
+      getIMGatewayManager().getIMStore().deleteDingTalkInstance(instanceId);
+      if (getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete DingTalk instance',
+      };
+    }
+  });
+
+  ipcMain.handle('im:dingtalk:instance:config:set', async (_event, instanceId: string, config: any, options?: { syncGateway?: boolean }) => {
+    try {
+      getIMGatewayManager().getIMStore().setDingTalkInstanceConfig(instanceId, config);
+      if (options?.syncGateway && getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to set DingTalk instance config',
+      };
+    }
+  });
+
+  // QQ Multi-Instance handlers
+  ipcMain.handle('im:qq:instance:add', async (_event, name: string) => {
+    try {
+      const instanceId = crypto.randomUUID();
+      const { DEFAULT_QQ_CONFIG: defaults } = await import('./im/types');
+      const instance = {
+        ...defaults,
+        instanceId,
+        instanceName: name || 'QQ Bot',
+      };
+      getIMGatewayManager().getIMStore().setQQInstanceConfig(instanceId, instance);
+      return { success: true, instance };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to add QQ instance',
+      };
+    }
+  });
+
+  ipcMain.handle('im:qq:instance:delete', async (_event, instanceId: string) => {
+    try {
+      getIMGatewayManager().getIMStore().deleteQQInstance(instanceId);
+      if (getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete QQ instance',
+      };
+    }
+  });
+
+  ipcMain.handle('im:qq:instance:config:set', async (_event, instanceId: string, config: any, options?: { syncGateway?: boolean }) => {
+    try {
+      getIMGatewayManager().getIMStore().setQQInstanceConfig(instanceId, config);
+      if (options?.syncGateway && getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to set QQ instance config',
+      };
+    }
+  });
+
+  // Feishu Multi-Instance handlers
+  ipcMain.handle('im:feishu:instance:add', async (_event, name: string) => {
+    try {
+      const instanceId = crypto.randomUUID();
+      const { DEFAULT_FEISHU_OPENCLAW_CONFIG: defaults } = await import('./im/types');
+      const instance = {
+        ...defaults,
+        instanceId,
+        instanceName: name || 'Feishu Bot',
+      };
+      getIMGatewayManager().getIMStore().setFeishuInstanceConfig(instanceId, instance);
+      return { success: true, instance };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to add Feishu instance',
+      };
+    }
+  });
+
+  ipcMain.handle('im:feishu:instance:delete', async (_event, instanceId: string) => {
+    try {
+      getIMGatewayManager().getIMStore().deleteFeishuInstance(instanceId);
+      if (getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete Feishu instance',
+      };
+    }
+  });
+
+  ipcMain.handle('im:feishu:instance:config:set', async (_event, instanceId: string, config: any, options?: { syncGateway?: boolean }) => {
+    try {
+      getIMGatewayManager().getIMStore().setFeishuInstanceConfig(instanceId, config);
+      if (options?.syncGateway && getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to set Feishu instance config',
       };
     }
   });

@@ -133,9 +133,9 @@ const createSync = (tmpDir, appConfig, options = {}) => {
       systemPrompt: options.systemPrompt ?? '',
       executionMode: options.executionMode ?? 'auto',
     }),
-    getDingTalkConfig: () => null,
-    getFeishuConfig: () => null,
-    getQQConfig: () => options.qqConfig ?? null,
+    getDingTalkInstances: () => options.dingTalkInstances ?? [],
+    getFeishuInstances: () => options.feishuInstances ?? [],
+    getQQInstances: () => options.qqInstances ?? [],
     getWecomConfig: () => null,
     getSkillsPrompt: () => null,
   });
@@ -357,7 +357,9 @@ test('sync disables legacy qqbot-cron skill so QQ reminders use native cron', (t
   setElectronPaths(tmpDir);
 
   const sync = createSync(tmpDir, createAppConfig(), {
-    qqConfig: {
+    qqInstances: [{
+      instanceId: 'default',
+      instanceName: 'Default',
       enabled: true,
       appId: 'qq-app-id',
       appSecret: 'qq-app-secret',
@@ -369,7 +371,7 @@ test('sync disables legacy qqbot-cron skill so QQ reminders use native cron', (t
       markdownSupport: true,
       imageServerBaseUrl: '',
       debug: false,
-    },
+    }],
   });
   const result = sync.sync('test-qq-native-cron');
 

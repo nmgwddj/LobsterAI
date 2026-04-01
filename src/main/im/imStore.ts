@@ -8,9 +8,15 @@ import { PlatformRegistry } from '../../shared/platform';
 import {
   IMGatewayConfig,
   DingTalkOpenClawConfig,
+  DingTalkInstanceConfig,
+  DingTalkMultiInstanceConfig,
   FeishuOpenClawConfig,
+  FeishuInstanceConfig,
+  FeishuMultiInstanceConfig,
   TelegramOpenClawConfig,
   QQConfig,
+  QQInstanceConfig,
+  QQMultiInstanceConfig,
   DiscordOpenClawConfig,
   NimConfig,
   NeteaseBeeChanConfig,
@@ -21,9 +27,12 @@ import {
   Platform,
   IMSessionMapping,
   DEFAULT_DINGTALK_OPENCLAW_CONFIG,
+  DEFAULT_DINGTALK_MULTI_INSTANCE_CONFIG,
   DEFAULT_FEISHU_OPENCLAW_CONFIG,
+  DEFAULT_FEISHU_MULTI_INSTANCE_CONFIG,
   DEFAULT_TELEGRAM_OPENCLAW_CONFIG,
   DEFAULT_QQ_CONFIG,
+  DEFAULT_QQ_MULTI_INSTANCE_CONFIG,
   DEFAULT_DISCORD_OPENCLAW_CONFIG,
   DEFAULT_NIM_CONFIG,
   DEFAULT_NETEASE_BEE_CONFIG,
@@ -339,6 +348,138 @@ export class IMStore {
       }
     }
 
+    // Migrate single QQ config to multi-instance format
+    const oldQQResult = this.db.exec('SELECT value FROM im_config WHERE key = ?', ['qq']);
+    const existingQQInstances = this.db.exec('SELECT key FROM im_config WHERE key LIKE ?', ['qq:%']);
+    if (oldQQResult[0]?.values[0] && !existingQQInstances[0]?.values?.length) {
+      try {
+        const oldConfig = JSON.parse(oldQQResult[0].values[0][0] as string) as QQConfig;
+        const instanceId = crypto.randomUUID();
+        const instanceConfig: QQInstanceConfig = {
+          ...DEFAULT_QQ_CONFIG,
+          ...oldConfig,
+          instanceId,
+          instanceName: 'QQ Bot 1',
+        };
+        const now = Date.now();
+        this.db.run(
+          'INSERT INTO im_config (key, value, updated_at) VALUES (?, ?, ?)',
+          [`qq:${instanceId}`, JSON.stringify(instanceConfig), now]
+        );
+        this.db.run('DELETE FROM im_config WHERE key = ?', ['qq']);
+        // Migrate session mappings
+        this.db.run(
+          'UPDATE im_session_mappings SET platform = ? WHERE platform = ?',
+          [`qq:${instanceId}`, 'qq']
+        );
+        // Migrate agent bindings
+        const settingsRow = this.db.exec('SELECT value FROM im_config WHERE key = ?', ['settings']);
+        if (settingsRow[0]?.values[0]) {
+          const settings = JSON.parse(settingsRow[0].values[0][0] as string) as IMSettings;
+          if (settings.platformAgentBindings?.['qq']) {
+            settings.platformAgentBindings[`qq:${instanceId}`] = settings.platformAgentBindings['qq'];
+            delete settings.platformAgentBindings['qq'];
+            this.db.run(
+              'UPDATE im_config SET value = ?, updated_at = ? WHERE key = ?',
+              [JSON.stringify(settings), now, 'settings']
+            );
+          }
+        }
+        changed = true;
+        console.log('[IMStore] Migrated single QQ config to multi-instance format');
+      } catch {
+        // Ignore parse errors
+      }
+    }
+
+    // Migrate single Feishu config to multi-instance format
+    const oldFeishuSingle = this.db.exec('SELECT value FROM im_config WHERE key = ?', ['feishuOpenClaw']);
+    const existingFeishuInstances = this.db.exec('SELECT key FROM im_config WHERE key LIKE ?', ['feishu:%']);
+    if (oldFeishuSingle[0]?.values[0] && !existingFeishuInstances[0]?.values?.length) {
+      try {
+        const oldConfig = JSON.parse(oldFeishuSingle[0].values[0][0] as string) as FeishuOpenClawConfig;
+        const instanceId = crypto.randomUUID();
+        const instanceConfig: FeishuInstanceConfig = {
+          ...DEFAULT_FEISHU_OPENCLAW_CONFIG,
+          ...oldConfig,
+          instanceId,
+          instanceName: 'Feishu Bot 1',
+        };
+        const now = Date.now();
+        this.db.run(
+          'INSERT INTO im_config (key, value, updated_at) VALUES (?, ?, ?)',
+          [`feishu:${instanceId}`, JSON.stringify(instanceConfig), now]
+        );
+        this.db.run('DELETE FROM im_config WHERE key = ?', ['feishuOpenClaw']);
+        // Migrate session mappings
+        this.db.run(
+          'UPDATE im_session_mappings SET platform = ? WHERE platform = ?',
+          [`feishu:${instanceId}`, 'feishu']
+        );
+        // Migrate agent bindings
+        const settingsRow = this.db.exec('SELECT value FROM im_config WHERE key = ?', ['settings']);
+        if (settingsRow[0]?.values[0]) {
+          const settings = JSON.parse(settingsRow[0].values[0][0] as string) as IMSettings;
+          if (settings.platformAgentBindings?.['feishu']) {
+            settings.platformAgentBindings[`feishu:${instanceId}`] = settings.platformAgentBindings['feishu'];
+            delete settings.platformAgentBindings['feishu'];
+            this.db.run(
+              'UPDATE im_config SET value = ?, updated_at = ? WHERE key = ?',
+              [JSON.stringify(settings), now, 'settings']
+            );
+          }
+        }
+        changed = true;
+        console.log('[IMStore] Migrated single Feishu config to multi-instance format');
+      } catch {
+        // Ignore parse errors
+      }
+    }
+
+    // Migrate single DingTalk config to multi-instance format
+    const oldDingtalkSingle = this.db.exec('SELECT value FROM im_config WHERE key = ?', ['dingtalkOpenClaw']);
+    const existingDingtalkInstances = this.db.exec('SELECT key FROM im_config WHERE key LIKE ?', ['dingtalk:%']);
+    if (oldDingtalkSingle[0]?.values[0] && !existingDingtalkInstances[0]?.values?.length) {
+      try {
+        const oldDtConfig = JSON.parse(oldDingtalkSingle[0].values[0][0] as string) as DingTalkOpenClawConfig;
+        const instanceId = crypto.randomUUID();
+        const instanceConfig: DingTalkInstanceConfig = {
+          ...DEFAULT_DINGTALK_OPENCLAW_CONFIG,
+          ...oldDtConfig,
+          instanceId,
+          instanceName: 'DingTalk Bot 1',
+        };
+        const now = Date.now();
+        this.db.run(
+          'INSERT INTO im_config (key, value, updated_at) VALUES (?, ?, ?)',
+          [`dingtalk:${instanceId}`, JSON.stringify(instanceConfig), now]
+        );
+        this.db.run('DELETE FROM im_config WHERE key = ?', ['dingtalkOpenClaw']);
+        // Migrate session mappings
+        this.db.run(
+          'UPDATE im_session_mappings SET platform = ? WHERE platform = ?',
+          [`dingtalk:${instanceId}`, 'dingtalk']
+        );
+        // Migrate agent bindings
+        const settingsRow = this.db.exec('SELECT value FROM im_config WHERE key = ?', ['settings']);
+        if (settingsRow[0]?.values[0]) {
+          const settings = JSON.parse(settingsRow[0].values[0][0] as string) as IMSettings;
+          if (settings.platformAgentBindings?.['dingtalk']) {
+            settings.platformAgentBindings[`dingtalk:${instanceId}`] = settings.platformAgentBindings['dingtalk'];
+            delete settings.platformAgentBindings['dingtalk'];
+            this.db.run(
+              'UPDATE im_config SET value = ?, updated_at = ? WHERE key = ?',
+              [JSON.stringify(settings), now, 'settings']
+            );
+          }
+        }
+        changed = true;
+        console.log('[IMStore] Migrated single DingTalk config to multi-instance format');
+      } catch {
+        // Ignore parse errors
+      }
+    }
+
     if (changed) {
       this.saveDb();
     }
@@ -371,13 +512,13 @@ export class IMStore {
   // ==================== Full Config Operations ====================
 
   getConfig(): IMGatewayConfig {
-    const dingtalk = this.getConfigValue<DingTalkOpenClawConfig>('dingtalkOpenClaw') ?? DEFAULT_DINGTALK_OPENCLAW_CONFIG;
-    const feishu = this.getConfigValue<FeishuOpenClawConfig>('feishuOpenClaw') ?? DEFAULT_FEISHU_OPENCLAW_CONFIG;
+    const dingtalkMulti = this.getDingTalkMultiInstanceConfig();
     const telegram = this.getConfigValue<TelegramOpenClawConfig>('telegramOpenClaw') ?? DEFAULT_TELEGRAM_OPENCLAW_CONFIG;
     const discord = this.getConfigValue<DiscordOpenClawConfig>('discordOpenClaw') ?? DEFAULT_DISCORD_OPENCLAW_CONFIG;
     const nimConfig = this.getConfigValue<NimConfig>('nim') ?? DEFAULT_NIM_CONFIG;
     const neteaseBeeChan = this.getConfigValue<NeteaseBeeChanConfig>('netease-bee') ?? DEFAULT_NETEASE_BEE_CONFIG;
-    const qq = this.getConfigValue<QQConfig>('qq') ?? DEFAULT_QQ_CONFIG;
+    const qqMulti = this.getQQMultiInstanceConfig();
+    const feishuMulti = this.getFeishuMultiInstanceConfig();
     const wecom = this.getConfigValue<WecomOpenClawConfig>('wecomOpenClaw') ?? DEFAULT_WECOM_CONFIG;
     const popo = this.getConfigValue<PopoOpenClawConfig>('popo') ?? DEFAULT_POPO_CONFIG;
     const weixin = this.getConfigValue<WeixinOpenClawConfig>('weixin') ?? DEFAULT_WEIXIN_CONFIG;
@@ -395,13 +536,13 @@ export class IMStore {
     };
 
     return {
-      dingtalk: resolveEnabled(dingtalk, DEFAULT_DINGTALK_OPENCLAW_CONFIG),
-      feishu: resolveEnabled(feishu, DEFAULT_FEISHU_OPENCLAW_CONFIG),
+      dingtalk: dingtalkMulti,
+      feishu: feishuMulti,
       telegram: resolveEnabled(telegram, DEFAULT_TELEGRAM_OPENCLAW_CONFIG),
       discord: resolveEnabled(discord, DEFAULT_DISCORD_OPENCLAW_CONFIG),
       nim: resolveEnabled(nimConfig, DEFAULT_NIM_CONFIG),
       'netease-bee': resolveEnabled(neteaseBeeChan, DEFAULT_NETEASE_BEE_CONFIG),
-      qq: resolveEnabled(qq, DEFAULT_QQ_CONFIG),
+      qq: qqMulti,
       wecom: resolveEnabled(wecom, DEFAULT_WECOM_CONFIG),
       popo: resolveEnabled(popo, DEFAULT_POPO_CONFIG),
       weixin: resolveEnabled(weixin, DEFAULT_WEIXIN_CONFIG),
@@ -411,10 +552,10 @@ export class IMStore {
 
   setConfig(config: Partial<IMGatewayConfig>): void {
     if (config.dingtalk) {
-      this.setDingTalkOpenClawConfig(config.dingtalk);
+      this.setDingTalkMultiInstanceConfig(config.dingtalk);
     }
     if (config.feishu) {
-      this.setFeishuOpenClawConfig(config.feishu);
+      this.setFeishuMultiInstanceConfig(config.feishu);
     }
     if (config.telegram) {
       this.setTelegramOpenClawConfig(config.telegram);
@@ -429,7 +570,7 @@ export class IMStore {
       this.setNeteaseBeeChanConfig(config['netease-bee']);
     }
     if (config.qq) {
-      this.setQQConfig(config.qq);
+      this.setQQMultiInstanceConfig(config.qq);
     }
     if (config.wecom) {
       this.setWecomConfig(config.wecom);
@@ -447,26 +588,160 @@ export class IMStore {
 
   // ==================== DingTalk OpenClaw Config ====================
 
+  /** @deprecated Use getDingTalkMultiInstanceConfig() or getDingTalkInstances() instead */
   getDingTalkOpenClawConfig(): DingTalkOpenClawConfig {
     const stored = this.getConfigValue<DingTalkOpenClawConfig>('dingtalkOpenClaw');
     return { ...DEFAULT_DINGTALK_OPENCLAW_CONFIG, ...stored };
   }
 
+  /** @deprecated Use setDingTalkInstanceConfig() instead */
   setDingTalkOpenClawConfig(config: Partial<DingTalkOpenClawConfig>): void {
     const current = this.getDingTalkOpenClawConfig();
     this.setConfigValue('dingtalkOpenClaw', { ...current, ...config });
   }
 
+  // ==================== DingTalk Multi-Instance Config ====================
+
+  getDingTalkInstances(): DingTalkInstanceConfig[] {
+    const result = this.db.exec(
+      'SELECT key, value FROM im_config WHERE key LIKE ?',
+      ['dingtalk:%']
+    );
+    if (!result[0]?.values) return [];
+    const instances: DingTalkInstanceConfig[] = [];
+    for (const row of result[0].values) {
+      try {
+        const config = JSON.parse(row[1] as string) as DingTalkInstanceConfig;
+        instances.push({ ...DEFAULT_DINGTALK_OPENCLAW_CONFIG, ...config });
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    return instances;
+  }
+
+  getDingTalkInstanceConfig(instanceId: string): DingTalkInstanceConfig | null {
+    const stored = this.getConfigValue<DingTalkInstanceConfig>(`dingtalk:${instanceId}`);
+    if (!stored) return null;
+    return { ...DEFAULT_DINGTALK_OPENCLAW_CONFIG, ...stored };
+  }
+
+  setDingTalkInstanceConfig(instanceId: string, config: Partial<DingTalkInstanceConfig>): void {
+    const current = this.getDingTalkInstanceConfig(instanceId);
+    if (current) {
+      this.setConfigValue(`dingtalk:${instanceId}`, { ...current, ...config });
+    } else {
+      this.setConfigValue(`dingtalk:${instanceId}`, {
+        ...DEFAULT_DINGTALK_OPENCLAW_CONFIG,
+        instanceId,
+        instanceName: config.instanceName || 'DingTalk Bot',
+        ...config,
+      });
+    }
+  }
+
+  deleteDingTalkInstance(instanceId: string): void {
+    const now = Date.now();
+    this.db.run('DELETE FROM im_config WHERE key = ?', [`dingtalk:${instanceId}`]);
+    // Clean up session mappings for this instance
+    this.db.run(
+      'DELETE FROM im_session_mappings WHERE platform = ?',
+      [`dingtalk:${instanceId}`]
+    );
+    this.saveDb();
+    void now;
+  }
+
+  getDingTalkMultiInstanceConfig(): DingTalkMultiInstanceConfig {
+    const instances = this.getDingTalkInstances();
+    if (instances.length === 0) return DEFAULT_DINGTALK_MULTI_INSTANCE_CONFIG;
+    return { instances };
+  }
+
+  setDingTalkMultiInstanceConfig(config: DingTalkMultiInstanceConfig): void {
+    // Write each instance individually
+    for (const inst of config.instances) {
+      this.setDingTalkInstanceConfig(inst.instanceId, inst);
+    }
+  }
+
   // ==================== Feishu OpenClaw Config ====================
 
+  /** @deprecated Use getFeishuMultiInstanceConfig() or getFeishuInstances() instead */
   getFeishuOpenClawConfig(): FeishuOpenClawConfig {
     const stored = this.getConfigValue<FeishuOpenClawConfig>('feishuOpenClaw');
     return { ...DEFAULT_FEISHU_OPENCLAW_CONFIG, ...stored };
   }
 
+  /** @deprecated Use setFeishuInstanceConfig() instead */
   setFeishuOpenClawConfig(config: Partial<FeishuOpenClawConfig>): void {
     const current = this.getFeishuOpenClawConfig();
     this.setConfigValue('feishuOpenClaw', { ...current, ...config });
+  }
+
+  // ==================== Feishu Multi-Instance Config ====================
+
+  getFeishuInstances(): FeishuInstanceConfig[] {
+    const result = this.db.exec(
+      'SELECT key, value FROM im_config WHERE key LIKE ?',
+      ['feishu:%']
+    );
+    if (!result[0]?.values) return [];
+    const instances: FeishuInstanceConfig[] = [];
+    for (const row of result[0].values) {
+      try {
+        const config = JSON.parse(row[1] as string) as FeishuInstanceConfig;
+        instances.push({ ...DEFAULT_FEISHU_OPENCLAW_CONFIG, ...config });
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    return instances;
+  }
+
+  getFeishuInstanceConfig(instanceId: string): FeishuInstanceConfig | null {
+    const stored = this.getConfigValue<FeishuInstanceConfig>(`feishu:${instanceId}`);
+    if (!stored) return null;
+    return { ...DEFAULT_FEISHU_OPENCLAW_CONFIG, ...stored };
+  }
+
+  setFeishuInstanceConfig(instanceId: string, config: Partial<FeishuInstanceConfig>): void {
+    const current = this.getFeishuInstanceConfig(instanceId);
+    if (current) {
+      this.setConfigValue(`feishu:${instanceId}`, { ...current, ...config });
+    } else {
+      this.setConfigValue(`feishu:${instanceId}`, {
+        ...DEFAULT_FEISHU_OPENCLAW_CONFIG,
+        instanceId,
+        instanceName: config.instanceName || 'Feishu Bot',
+        ...config,
+      });
+    }
+  }
+
+  deleteFeishuInstance(instanceId: string): void {
+    const now = Date.now();
+    this.db.run('DELETE FROM im_config WHERE key = ?', [`feishu:${instanceId}`]);
+    // Clean up session mappings for this instance
+    this.db.run(
+      'DELETE FROM im_session_mappings WHERE platform = ?',
+      [`feishu:${instanceId}`]
+    );
+    this.saveDb();
+    void now;
+  }
+
+  getFeishuMultiInstanceConfig(): FeishuMultiInstanceConfig {
+    const instances = this.getFeishuInstances();
+    if (instances.length === 0) return DEFAULT_FEISHU_MULTI_INSTANCE_CONFIG;
+    return { instances };
+  }
+
+  setFeishuMultiInstanceConfig(config: FeishuMultiInstanceConfig): void {
+    // Write each instance individually
+    for (const inst of config.instances) {
+      this.setFeishuInstanceConfig(inst.instanceId, inst);
+    }
   }
 
   // ==================== Discord OpenClaw Config ====================
@@ -517,16 +792,81 @@ export class IMStore {
     this.setConfigValue('telegramOpenClaw', { ...current, ...config });
   }
 
-  // ==================== QQ Config ====================
+  // ==================== QQ Multi-Instance Config ====================
 
+  /** @deprecated Use getQQMultiInstanceConfig() or getQQInstances() instead */
   getQQConfig(): QQConfig {
     const stored = this.getConfigValue<QQConfig>('qq');
     return { ...DEFAULT_QQ_CONFIG, ...stored };
   }
 
+  /** @deprecated Use setQQInstanceConfig() instead */
   setQQConfig(config: Partial<QQConfig>): void {
     const current = this.getQQConfig();
     this.setConfigValue('qq', { ...current, ...config });
+  }
+
+  getQQInstances(): QQInstanceConfig[] {
+    const result = this.db.exec(
+      'SELECT key, value FROM im_config WHERE key LIKE ?',
+      ['qq:%']
+    );
+    if (!result[0]?.values) return [];
+    const instances: QQInstanceConfig[] = [];
+    for (const row of result[0].values) {
+      try {
+        const config = JSON.parse(row[1] as string) as QQInstanceConfig;
+        instances.push({ ...DEFAULT_QQ_CONFIG, ...config });
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    return instances;
+  }
+
+  getQQInstanceConfig(instanceId: string): QQInstanceConfig | null {
+    const stored = this.getConfigValue<QQInstanceConfig>(`qq:${instanceId}`);
+    if (!stored) return null;
+    return { ...DEFAULT_QQ_CONFIG, ...stored };
+  }
+
+  setQQInstanceConfig(instanceId: string, config: Partial<QQInstanceConfig>): void {
+    const current = this.getQQInstanceConfig(instanceId);
+    if (current) {
+      this.setConfigValue(`qq:${instanceId}`, { ...current, ...config });
+    } else {
+      this.setConfigValue(`qq:${instanceId}`, {
+        ...DEFAULT_QQ_CONFIG,
+        instanceId,
+        instanceName: config.instanceName || `QQ Bot`,
+        ...config,
+      });
+    }
+  }
+
+  deleteQQInstance(instanceId: string): void {
+    const now = Date.now();
+    this.db.run('DELETE FROM im_config WHERE key = ?', [`qq:${instanceId}`]);
+    // Clean up session mappings for this instance
+    this.db.run(
+      'DELETE FROM im_session_mappings WHERE platform = ?',
+      [`qq:${instanceId}`]
+    );
+    this.saveDb();
+    void now;
+  }
+
+  getQQMultiInstanceConfig(): QQMultiInstanceConfig {
+    const instances = this.getQQInstances();
+    if (instances.length === 0) return DEFAULT_QQ_MULTI_INSTANCE_CONFIG;
+    return { instances };
+  }
+
+  setQQMultiInstanceConfig(config: QQMultiInstanceConfig): void {
+    // Write each instance individually
+    for (const inst of config.instances) {
+      this.setQQInstanceConfig(inst.instanceId, inst);
+    }
   }
 
   // ==================== WeCom OpenClaw Config ====================
@@ -592,13 +932,13 @@ export class IMStore {
    */
   isConfigured(): boolean {
     const config = this.getConfig();
-    const hasDingTalk = !!(config.dingtalk.clientId && config.dingtalk.clientSecret);
-    const hasFeishu = !!(config.feishu.appId && config.feishu.appSecret);
+    const hasDingTalk = config.dingtalk?.instances?.some(i => !!(i.clientId && i.clientSecret)) ?? false;
+    const hasFeishu = config.feishu?.instances?.some(i => !!(i.appId && i.appSecret)) ?? false;
     const hasTelegram = !!config.telegram.botToken;
     const hasDiscord = !!config.discord.botToken;
     const hasNim = !!(config.nim.appKey && config.nim.account && config.nim.token);
     const hasNeteaseBeeChan = !!(config['netease-bee']?.clientId && config['netease-bee']?.secret);
-    const hasQQ = !!(config.qq?.appId && config.qq?.appSecret);
+    const hasQQ = config.qq?.instances?.some(i => !!(i.appId && i.appSecret)) ?? false;
     const hasWecom = !!(config.wecom?.botId && config.wecom?.secret);
     return hasDingTalk || hasFeishu || hasTelegram || hasDiscord || hasNim || hasNeteaseBeeChan || hasQQ || hasWecom;
   }

@@ -437,6 +437,15 @@ interface IElectronAPI {
     }>;
     approvePairingCode: (platform: string, code: string) => Promise<{ success: boolean; error?: string }>;
     rejectPairingRequest: (platform: string, code: string) => Promise<{ success: boolean; error?: string }>;
+    addQQInstance: (name: string) => Promise<{ success: boolean; instance?: QQInstanceConfig; error?: string }>;
+    deleteQQInstance: (instanceId: string) => Promise<{ success: boolean; error?: string }>;
+    setQQInstanceConfig: (instanceId: string, config: any, options?: { syncGateway?: boolean }) => Promise<{ success: boolean; error?: string }>;
+    addFeishuInstance: (name: string) => Promise<{ success: boolean; instance?: FeishuInstanceConfig; error?: string }>;
+    deleteFeishuInstance: (instanceId: string) => Promise<{ success: boolean; error?: string }>;
+    setFeishuInstanceConfig: (instanceId: string, config: any, options?: { syncGateway?: boolean }) => Promise<{ success: boolean; error?: string }>;
+    addDingTalkInstance: (name: string) => Promise<{ success: boolean; instance?: DingTalkInstanceConfig; error?: string }>;
+    deleteDingTalkInstance: (instanceId: string) => Promise<{ success: boolean; error?: string }>;
+    setDingTalkInstanceConfig: (instanceId: string, config: any, options?: { syncGateway?: boolean }) => Promise<{ success: boolean; error?: string }>;
     onStatusChange: (callback: (status: IMGatewayStatus) => void) => () => void;
     onMessageReceived: (callback: (message: IMMessage) => void) => () => void;
   };
@@ -519,10 +528,10 @@ interface IElectronAPI {
 
 // IM Gateway types
 interface IMGatewayConfig {
-  dingtalk: DingTalkOpenClawConfig;
-  feishu: FeishuOpenClawConfig;
+  dingtalk: DingTalkMultiInstanceConfig;
+  feishu: FeishuMultiInstanceConfig;
   telegram: TelegramOpenClawConfig;
-  qq: QQConfig;
+  qq: QQMultiInstanceConfig;
   discord: DiscordOpenClawConfig;
   nim: NimConfig;
   'netease-bee': NeteaseBeeChanConfig;
@@ -547,6 +556,24 @@ interface DingTalkOpenClawConfig {
   debug: boolean;
 }
 
+interface DingTalkInstanceConfig extends DingTalkOpenClawConfig {
+  instanceId: string;
+  instanceName: string;
+}
+
+interface DingTalkInstanceStatus extends DingTalkGatewayStatus {
+  instanceId: string;
+  instanceName: string;
+}
+
+interface DingTalkMultiInstanceConfig {
+  instances: DingTalkInstanceConfig[];
+}
+
+interface DingTalkMultiInstanceStatus {
+  instances: DingTalkInstanceStatus[];
+}
+
 interface FeishuOpenClawGroupConfig {
   requireMention?: boolean;
   allowFrom?: string[];
@@ -567,6 +594,24 @@ interface FeishuOpenClawConfig {
   replyMode: 'auto' | 'static' | 'streaming';
   mediaMaxMb: number;
   debug: boolean;
+}
+
+interface FeishuInstanceConfig extends FeishuOpenClawConfig {
+  instanceId: string;
+  instanceName: string;
+}
+
+interface FeishuInstanceStatus extends FeishuGatewayStatus {
+  instanceId: string;
+  instanceName: string;
+}
+
+interface FeishuMultiInstanceConfig {
+  instances: FeishuInstanceConfig[];
+}
+
+interface FeishuMultiInstanceStatus {
+  instances: FeishuInstanceStatus[];
 }
 
 interface TelegramOpenClawGroupConfig {
@@ -668,6 +713,24 @@ interface QQConfig {
   debug: boolean;
 }
 
+interface QQInstanceConfig extends QQConfig {
+  instanceId: string;
+  instanceName: string;
+}
+
+interface QQMultiInstanceConfig {
+  instances: QQInstanceConfig[];
+}
+
+interface QQInstanceStatus extends QQGatewayStatus {
+  instanceId: string;
+  instanceName: string;
+}
+
+interface QQMultiInstanceStatus {
+  instances: QQInstanceStatus[];
+}
+
 interface WecomConfig {
   enabled: boolean;
   botId: string;
@@ -715,9 +778,9 @@ interface IMSettings {
 }
 
 interface IMGatewayStatus {
-  dingtalk: DingTalkGatewayStatus;
-  feishu: FeishuGatewayStatus;
-  qq: QQGatewayStatus;
+  dingtalk: DingTalkMultiInstanceStatus;
+  feishu: FeishuMultiInstanceStatus;
+  qq: QQMultiInstanceStatus;
   telegram: TelegramGatewayStatus;
   discord: DiscordGatewayStatus;
   nim: NimGatewayStatus;
