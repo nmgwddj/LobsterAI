@@ -1,0 +1,23 @@
+src/renderer/components/Settings.tsx
+  36222f03dbf2ae19 386-387,608-615,1960-2008
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "562b1354182366a6f66a9fafababc983a5da08bb",
+  "prompts": {
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 59,
+      "total_deletions": 1,
+      "accepted_lines": 59,
+      "overriden_lines": 0
+    }
+  }
+}

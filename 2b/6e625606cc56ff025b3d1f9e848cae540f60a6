@@ -1,0 +1,50 @@
+src/main/libs/agentEngine/openclawRuntimeAdapter.ts
+  8d888da9bf34b84f 107-108,991,1596-1598,2140-2160,2164-2224,2309-2317,2688-2690,2722-2724,2728,3380
+docs/superpowers/plans/2026-03-21-prevent-sleep.md
+  36222f03dbf2ae19 1-280
+docs/superpowers/specs/2026-03-21-prevent-sleep-design.md
+  36222f03dbf2ae19 1-104
+src/renderer/services/i18n.ts
+  36222f03dbf2ae19 862-863,1909-1910
+src/main/main.ts
+  36222f03dbf2ae19 1,570,1679-1708,3993-4002
+src/renderer/components/Settings.tsx
+  36222f03dbf2ae19 386-387,608-615,1929-1976,1978-2007
+src/renderer/types/electron.d.ts
+  36222f03dbf2ae19 360-362
+src/main/preload.ts
+  36222f03dbf2ae19 265-268
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "2b6e625606cc56ff025b3d1f9e848cae540f60a6",
+  "prompts": {
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 32,
+      "total_deletions": 31,
+      "accepted_lines": 525,
+      "overriden_lines": 0
+    },
+    "8d888da9bf34b84f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86bf0770-5cc4-4105-a08e-3d2c873e2d9c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 144,
+      "total_deletions": 59,
+      "accepted_lines": 105,
+      "overriden_lines": 0
+    }
+  }
+}

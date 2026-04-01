@@ -1,0 +1,36 @@
+docs/superpowers/specs/2026-03-22-enterprise-config-import-design.md
+  565f3554103e3b21 1-224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "24e383570db5141d6bcf8b7103273f4b9f4aae50",
+  "prompts": {
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 561,
+      "total_deletions": 14,
+      "accepted_lines": 556,
+      "overriden_lines": 0
+    },
+    "565f3554103e3b21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "035e8992-81d4-4229-8ce6-cf8be0aa9c22",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 243,
+      "total_deletions": 19,
+      "accepted_lines": 224,
+      "overriden_lines": 0
+    }
+  }
+}

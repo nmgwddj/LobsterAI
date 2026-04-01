@@ -1,0 +1,38 @@
+src/main/main.ts
+  8d888da9bf34b84f 28,2976-2985
+src/main/im/weixinLogin.ts
+  8d888da9bf34b84f 6-8,92-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "47a833b1cc24107c1ba0bcf5132be7bf299e8e11",
+  "prompts": {
+    "8d888da9bf34b84f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86bf0770-5cc4-4105-a08e-3d2c873e2d9c",
+        "model": "unknown"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 67,
+      "total_deletions": 13,
+      "accepted_lines": 56,
+      "overriden_lines": 0
+    },
+    "fe9e3c31b76336ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4f900daf-e3e1-4843-a21f-f0ab5f2eb6ec",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 13,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}

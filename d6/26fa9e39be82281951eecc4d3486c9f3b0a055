@@ -1,0 +1,25 @@
+src/renderer/store/slices/coworkSlice.ts
+  7c9c9556c2b32694 22,46,320-323,349
+src/renderer/services/cowork.ts
+  7c9c9556c2b32694 20,145-148,243,280
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "d626fa9e39be82281951eecc4d3486c9f3b0a055",
+  "prompts": {
+    "7c9c9556c2b32694": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6ded8298-731b-43c8-b94f-ecdccf7516ea",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 0,
+      "accepted_lines": 14,
+      "overriden_lines": 0
+    }
+  }
+}

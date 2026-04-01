@@ -1,0 +1,33 @@
+src/renderer/services/i18n.ts
+  36222f03dbf2ae19 842-845,1893-1896
+src/renderer/utils/regionFilter.ts
+  36222f03dbf2ae19 2
+src/renderer/store/slices/imSlice.ts
+  36222f03dbf2ae19 19,78-80,110
+src/renderer/components/im/IMSettings.tsx
+  36222f03dbf2ae19 12,14,33,45,398-400,432-444,523-528,663-673,726,771-773,792,930,3666-3808
+src/renderer/types/electron.d.ts
+  36222f03dbf2ae19 389-390,392,476,647-654,670,700,785-792
+src/renderer/types/im.ts
+  36222f03dbf2ae19 281-296,299,311,330,565-572,588,663-669
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "ce31fc7ddb87f96775c0d1338a27b846fc1fecdc",
+  "prompts": {
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 257,
+      "total_deletions": 8,
+      "accepted_lines": 257,
+      "overriden_lines": 0
+    }
+  }
+}

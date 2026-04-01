@@ -1,0 +1,27 @@
+src/renderer/services/i18n.ts
+  2b8afb5ad54f8213 947-953,1894-1900
+src/renderer/App.tsx
+  2b8afb5ad54f8213 30,46,146-147,373-378,381-382,702-707
+src/renderer/components/PrivacyDialog.tsx
+  2b8afb5ad54f8213 1-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "14de52cf0bab1abc70a5428674516904ada312ac",
+  "prompts": {
+    "2b8afb5ad54f8213": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81d51c6c-4e48-4424-a042-4637570b0d14",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 121,
+      "total_deletions": 13,
+      "accepted_lines": 106,
+      "overriden_lines": 2
+    }
+  }
+}

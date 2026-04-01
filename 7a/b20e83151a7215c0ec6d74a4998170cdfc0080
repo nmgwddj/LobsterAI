@@ -1,0 +1,66 @@
+src/common/coworkErrorClassify.ts
+  36222f03dbf2ae19 1-41
+src/renderer/App.tsx
+  36222f03dbf2ae19 14,622-623
+src/renderer/components/cowork/EngineStartupOverlay.tsx
+  36222f03dbf2ae19 1-87
+tests/coworkErrorClassify.test.mjs
+  36222f03dbf2ae19 3,5-6,8
+src/renderer/services/cowork.ts
+  36222f03dbf2ae19 32,35-36
+src/renderer/components/cowork/CoworkView.tsx
+  36222f03dbf2ae19 462-474,478-487,489-490,494-495,513-515
+src/main/i18n.ts
+  36222f03dbf2ae19 34-49,52-67,85-100,104-119
+src/main/libs/agentEngine/openclawRuntimeAdapter.ts
+  927dd64db0ce9c9a 2148-2153,2170-2171,2229-2235,2238,2245,2264-2269,2271,2278,2668-2674,2679,2685
+  1f08da0a3efc2ec2 2147,2213,2236
+src/main/im/imGatewayManager.ts
+  36222f03dbf2ae19 40,256-258
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "7ab20e83151a7215c0ec6d74a4998170cdfc0080",
+  "prompts": {
+    "1f08da0a3efc2ec2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dda92475-2350-4c57-8c14-be46b9b633a3",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 256,
+      "total_deletions": 178,
+      "accepted_lines": 236,
+      "overriden_lines": 0
+    },
+    "927dd64db0ce9c9a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f92135e6-bf13-479e-b0c0-b0839baf1dcf",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 35,
+      "accepted_lines": 34,
+      "overriden_lines": 0
+    }
+  }
+}
