@@ -1,0 +1,86 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.3",
+  "base_commit_sha": "7c4d47b3dd5df1bb94b2af13412d9063534eff97",
+  "prompts": {
+    "2d28e9d120b2d254": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b8bda658ffe4rRVN7a3qYAQJ0-077c60fb-ca4f-4d2a-bfe1-28194941d23b",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "768dc56e06a92207": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b808cdddffettyJO3swRLHKAX-db7550ee-a448-466a-a451-e039246034d0",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 303,
+      "overriden_lines": 0
+    },
+    "7c5a320fc594773a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b8bda658ffe4rRVN7a3qYAQJ0-39911a07-1fda-422f-bfe6-52da045ed063",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "a8898506eb6de12b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b8bda658ffe4rRVN7a3qYAQJ0-dfa8a316-6ad7-4413-a6c5-cbac0e185b50",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 343,
+      "overriden_lines": 0
+    },
+    "df214f5d3747b776": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b8bda658ffe4rRVN7a3qYAQJ0-3e316767-27e7-4d37-806d-f8343ac429ad",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "e32ad995545033e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b8bda658ffe4rRVN7a3qYAQJ0-0585f986-b2c7-4e80-b205-adef3ad41d8d",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 114,
+      "overriden_lines": 0
+    }
+  }
+}
