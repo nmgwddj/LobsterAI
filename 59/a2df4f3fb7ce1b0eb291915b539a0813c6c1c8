@@ -5,12 +5,12 @@ scripts/electron-builder-hooks.cjs
 src/main/libs/openclawConfigSync.ts
   1da98c2bd0b2201a 501-504,1140
 src/main/libs/openclawEngineManager.ts
-  1da98c2bd0b2201a 336-337,550,568-570,777-780,904-907
+  1da98c2bd0b2201a 13-14,118-123,345-346,417-433,444,575,593-595,666-735,872-875,999-1002
 ---
 {
   "schema_version": "authorship/3.0.0",
   "git_ai_version": "1.1.15",
-  "base_commit_sha": "d11284661a830ca2adf777abb2cbe653fc239e91",
+  "base_commit_sha": "59a2df4f3fb7ce1b0eb291915b539a0813c6c1c8",
   "prompts": {
     "1da98c2bd0b2201a": {
       "agent_id": {
@@ -22,7 +22,7 @@ src/main/libs/openclawEngineManager.ts
       "messages": [],
       "total_additions": 872,
       "total_deletions": 31,
-      "accepted_lines": 58,
+      "accepted_lines": 154,
       "overriden_lines": 0
     }
   }

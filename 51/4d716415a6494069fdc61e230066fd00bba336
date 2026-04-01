@@ -1,16 +1,12 @@
-scripts/build-openclaw-runtime.sh
-  1da98c2bd0b2201a 276-284,297-304,307-308
-scripts/electron-builder-hooks.cjs
-  1da98c2bd0b2201a 150-169
-src/main/libs/openclawConfigSync.ts
-  1da98c2bd0b2201a 501-504,1140
+scripts/nsis-installer.nsh
+  1da98c2bd0b2201a 57,59-62,64-68,70,73,84-90
 src/main/libs/openclawEngineManager.ts
-  1da98c2bd0b2201a 336-337,550,568-570,777-780,904-907
+  1da98c2bd0b2201a 389,885-888,890-893,895,907,909,912
 ---
 {
   "schema_version": "authorship/3.0.0",
   "git_ai_version": "1.1.15",
-  "base_commit_sha": "d11284661a830ca2adf777abb2cbe653fc239e91",
+  "base_commit_sha": "514d716415a6494069fdc61e230066fd00bba336",
   "prompts": {
     "1da98c2bd0b2201a": {
       "agent_id": {
@@ -20,9 +16,9 @@ src/main/libs/openclawEngineManager.ts
       },
       "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
       "messages": [],
-      "total_additions": 872,
-      "total_deletions": 31,
-      "accepted_lines": 58,
+      "total_additions": 119,
+      "total_deletions": 201,
+      "accepted_lines": 36,
       "overriden_lines": 0
     }
   }

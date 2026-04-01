@@ -1,0 +1,25 @@
+src/main/libs/claudeSettings.ts
+  a1c81aef5bc86155 62-65
+src/main/libs/openclawConfigSync.ts
+  a1c81aef5bc86155 9,1339-1349
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.3",
+  "base_commit_sha": "f03efc09038bf285f465fb54dfa0817134c4df43",
+  "prompts": {
+    "a1c81aef5bc86155": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f43e7392-f366-4520-b411-b76e89a7bfe9",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 1,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}

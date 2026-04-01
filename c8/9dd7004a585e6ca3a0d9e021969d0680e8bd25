@@ -1,0 +1,25 @@
+src/renderer/components/cowork/CoworkSessionDetail.tsx
+  81a0ed4740595f63 2088-2099
+src/renderer/components/cowork/CoworkPromptInput.tsx
+  81a0ed4740595f63 94-95,113,685-706,746-759
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "c89dd7004a585e6ca3a0d9e021969d0680e8bd25",
+  "prompts": {
+    "81a0ed4740595f63": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2df63747-2116-43b7-b1cf-44e2db15320f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 67,
+      "accepted_lines": 57,
+      "overriden_lines": 0
+    }
+  }
+}

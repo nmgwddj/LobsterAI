@@ -1,0 +1,23 @@
+src/main/main.ts
+  930395e2770addae 2963-2997,3011-3016,3020
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "3550ed4f706d9a4b68b7d8c2818f027f90a977f5",
+  "prompts": {
+    "930395e2770addae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "13a07f04-17a6-4f54-90e3-f433bc1e3f0f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 42,
+      "total_deletions": 1,
+      "accepted_lines": 42,
+      "overriden_lines": 0
+    }
+  }
+}

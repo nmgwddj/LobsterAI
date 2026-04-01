@@ -1,0 +1,38 @@
+src/main/main.ts
+  930395e2770addae 2975-2980
+src/renderer/components/im/IMSettings.tsx
+  930395e2770addae 2973-2981
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "784ca6575db9a59a48a163bc97a8497a2b3e0af1",
+  "prompts": {
+    "173263fadc684118": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e10077f2-15a5-4885-b86d-e75974f95f2e",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 917,
+      "total_deletions": 233,
+      "accepted_lines": 510,
+      "overriden_lines": 0
+    },
+    "930395e2770addae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "13a07f04-17a6-4f54-90e3-f433bc1e3f0f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 186,
+      "total_deletions": 209,
+      "accepted_lines": 186,
+      "overriden_lines": 0
+    }
+  }
+}

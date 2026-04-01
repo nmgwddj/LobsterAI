@@ -1,0 +1,31 @@
+src/renderer/App.tsx
+  dc2569e19c23d4e1 51,509-511,544
+src/main/main.ts
+  dc2569e19c23d4e1 3685-3686
+src/main/libs/enterpriseConfigSync.ts
+  dc2569e19c23d4e1 13
+src/renderer/types/electron.d.ts
+  dc2569e19c23d4e1 471
+src/renderer/components/Settings.tsx
+  dc2569e19c23d4e1 62,3324,3340
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "b027f2e352913ed004d7b13ba4384d7ad1bac82c",
+  "prompts": {
+    "dc2569e19c23d4e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7c97fea1-9006-41ac-83a8-7cffeee6e01d",
+        "model": "unknown"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 8,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    }
+  }
+}

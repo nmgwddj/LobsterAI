@@ -1,0 +1,23 @@
+src/main/im/imGatewayManager.ts
+  52ebc134a506ff69 1408,1412,1419-1421,1517,1582-1584
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "3a6962f8740271519dafbb8813fc432bfc75a677",
+  "prompts": {
+    "52ebc134a506ff69": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bae1892a-c2c3-48a4-bdcc-633962f7af8c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 5,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
