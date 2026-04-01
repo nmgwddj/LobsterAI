@@ -1,0 +1,23 @@
+src/renderer/components/cowork/CoworkSessionDetail.tsx
+  574e2fb30401b60a 2083,2098
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "0198bfd757407d12171938386bd736a04e6d9ec9",
+  "prompts": {
+    "574e2fb30401b60a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5cc98ee9-e64c-4d3b-b169-026be6ebb071",
+        "model": "<synthetic>"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}

@@ -1,0 +1,31 @@
+src/renderer/components/im/IMSettings.tsx
+  8d888da9bf34b84f 139-141,143-145,260-261,263-264,266,492-513,516-518,520,523,529-530,532,535-538,540-549,551-589,595,597,599-600,604-605,3074,3098,3101-3103,3107,3110-3114
+src/main/preload.ts
+  8d888da9bf34b84f 305-307
+src/main/main.ts
+  8d888da9bf34b84f 28,2963-2964,2966-2967,2969,2973,2975,2986
+src/main/im/weixinLogin.ts
+  8d888da9bf34b84f 1-88
+src/renderer/types/electron.d.ts
+  8d888da9bf34b84f 394-395
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "4e2559ac3c95e6b5bfa8251cb73e9490825f2fe3",
+  "prompts": {
+    "8d888da9bf34b84f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86bf0770-5cc4-4105-a08e-3d2c873e2d9c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 222,
+      "total_deletions": 42,
+      "accepted_lines": 215,
+      "overriden_lines": 0
+    }
+  }
+}

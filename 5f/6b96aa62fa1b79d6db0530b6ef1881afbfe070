@@ -1,0 +1,37 @@
+tests/coworkErrorClassify.test.mjs
+  36222f03dbf2ae19 3,5-6,8
+src/renderer/components/cowork/EngineStartupOverlay.tsx
+  36222f03dbf2ae19 1-87
+src/renderer/components/cowork/CoworkView.tsx
+  36222f03dbf2ae19 462-474,478-487,489-490,494-495,513-515
+src/main/im/imGatewayManager.ts
+  36222f03dbf2ae19 40-41,257-259
+src/renderer/App.tsx
+  36222f03dbf2ae19 14,622-623
+src/renderer/services/cowork.ts
+  36222f03dbf2ae19 32,35-36
+src/common/coworkErrorClassify.ts
+  36222f03dbf2ae19 1-41
+src/main/i18n.ts
+  36222f03dbf2ae19 34-49,52-67,85-100,104-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "5f6b96aa62fa1b79d6db0530b6ef1881afbfe070",
+  "prompts": {
+    "36222f03dbf2ae19": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ebd67c3b-7a81-4593-bf03-cfdbb53671b8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 256,
+      "total_deletions": 178,
+      "accepted_lines": 237,
+      "overriden_lines": 0
+    }
+  }
+}

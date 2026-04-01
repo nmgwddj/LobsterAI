@@ -1,0 +1,36 @@
+src/main/libs/openclawConfigSync.ts
+  981123e77f0f9429 90-96,1291-1292
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "0f9fc027c9e6477e5aed11d1b1fd74520bc82818",
+  "prompts": {
+    "981123e77f0f9429": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f9c0bd4-69ba-47c2-93fe-a2b2c3ed5c85",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 0,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "a8b2ae78405e2a5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c128f36-00a1-4ec4-a580-56c848041017",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "wulei <wulei05@corp.netease.com>",
+      "messages": [],
+      "total_additions": 19,
+      "total_deletions": 1,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    }
+  }
+}
