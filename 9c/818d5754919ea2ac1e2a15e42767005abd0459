@@ -10,7 +10,7 @@ src/main/libs/openclawEngineManager.ts
 {
   "schema_version": "authorship/3.0.0",
   "git_ai_version": "1.1.15",
-  "base_commit_sha": "d11284661a830ca2adf777abb2cbe653fc239e91",
+  "base_commit_sha": "9c818d5754919ea2ac1e2a15e42767005abd0459",
   "prompts": {
     "1da98c2bd0b2201a": {
       "agent_id": {

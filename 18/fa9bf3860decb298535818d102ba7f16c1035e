@@ -1,7 +1,29 @@
+scripts/build-openclaw-runtime.sh
+  1da98c2bd0b2201a 276-284,297-304,307-308
+scripts/electron-builder-hooks.cjs
+  1da98c2bd0b2201a 150-169
+src/main/libs/openclawConfigSync.ts
+  1da98c2bd0b2201a 501-504,1140
+src/main/libs/openclawEngineManager.ts
+  1da98c2bd0b2201a 336-337,550,568-570,777-780,904-907
 ---
 {
   "schema_version": "authorship/3.0.0",
   "git_ai_version": "1.1.15",
   "base_commit_sha": "18fa9bf3860decb298535818d102ba7f16c1035e",
-  "prompts": {}
+  "prompts": {
+    "1da98c2bd0b2201a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bec531f6-491c-48e2-ad5b-ccb435a05fca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 872,
+      "total_deletions": 31,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    }
+  }
 }

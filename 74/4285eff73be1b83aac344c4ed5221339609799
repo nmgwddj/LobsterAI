@@ -1,0 +1,45 @@
+spec/features/001-optimize-windows-startup/tasks.md
+  1da98c2bd0b2201a 1-76
+spec/features/001-optimize-windows-startup/spec.md
+  1da98c2bd0b2201a 1-129
+spec/features/001-optimize-windows-startup/checklists/requirements.md
+  1da98c2bd0b2201a 1-37
+spec/features/001-optimize-windows-startup/plan.md
+  1da98c2bd0b2201a 1-136
+package.json
+  1da98c2bd0b2201a 84,91-96
+scripts/apply-openclaw-runtime-hotfixes.cjs
+  1da98c2bd0b2201a 1-80
+spec/features/001-optimize-windows-startup/research.md
+  1da98c2bd0b2201a 1-58
+scripts/nsis-installer.nsh
+  1da98c2bd0b2201a 57,59-62,64-68,70,73,84-90
+scripts/build-openclaw-runtime.sh
+  1da98c2bd0b2201a 276-284,297-304,307-308
+src/main/libs/openclawEngineManager.ts
+  1da98c2bd0b2201a 394,585-597,611,632-657,728-797,816-828,951-971,973-980,984,986-1017,1141-1152
+scripts/electron-builder-hooks.cjs
+  1da98c2bd0b2201a 150-169
+src/main/libs/openclawConfigSync.ts
+  1da98c2bd0b2201a 509-512,1239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "744285eff73be1b83aac344c4ed5221339609799",
+  "prompts": {
+    "1da98c2bd0b2201a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bec531f6-491c-48e2-ad5b-ccb435a05fca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 119,
+      "total_deletions": 201,
+      "accepted_lines": 784,
+      "overriden_lines": 0
+    }
+  }
+}

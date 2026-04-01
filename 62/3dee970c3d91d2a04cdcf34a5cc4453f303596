@@ -1,0 +1,31 @@
+spec/features/001-optimize-windows-startup/research.md
+  1da98c2bd0b2201a 1-58
+spec/features/001-optimize-windows-startup/spec.md
+  1da98c2bd0b2201a 1-129
+spec/features/001-optimize-windows-startup/checklists/requirements.md
+  1da98c2bd0b2201a 1-37
+spec/features/001-optimize-windows-startup/plan.md
+  1da98c2bd0b2201a 1-136
+spec/features/001-optimize-windows-startup/tasks.md
+  1da98c2bd0b2201a 1-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "623dee970c3d91d2a04cdcf34a5cc4453f303596",
+  "prompts": {
+    "1da98c2bd0b2201a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bec531f6-491c-48e2-ad5b-ccb435a05fca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 436,
+      "total_deletions": 0,
+      "accepted_lines": 436,
+      "overriden_lines": 0
+    }
+  }
+}

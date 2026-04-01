@@ -1,0 +1,38 @@
+src/renderer/components/Sidebar.tsx
+  dc2569e19c23d4e1 33,48,312-317
+src/main/libs/enterpriseConfigSync.ts
+  c069bb47313793b4 240
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "2bb3072f930fd1e9e50b33a452a08dbb168d3323",
+  "prompts": {
+    "c069bb47313793b4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03833e47-5c4b-4a27-99e0-2c4423d02a34",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "dc2569e19c23d4e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7c97fea1-9006-41ac-83a8-7cffeee6e01d",
+        "model": "unknown"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 5,
+      "accepted_lines": 472,
+      "overriden_lines": 0
+    }
+  }
+}

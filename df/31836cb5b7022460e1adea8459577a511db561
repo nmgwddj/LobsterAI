@@ -1,0 +1,45 @@
+src/renderer/components/skills/SkillsManager.tsx
+  dc2569e19c23d4e1 26-30,476,487-489,492,595,605,712,722,809,822-824,828
+src/renderer/services/i18n.ts
+  dc2569e19c23d4e1 1112-1113,2217-2218
+src/main/libs/enterpriseConfigSync.test.ts
+  dc2569e19c23d4e1 1-109
+src/renderer/components/Settings.tsx
+  dc2569e19c23d4e1 60-62,415,2050-2070,3323,3338-3343
+src/main/preload.ts
+  dc2569e19c23d4e1 44-46,378-398
+src/main/i18n.ts
+  dc2569e19c23d4e1 53,57,95,99
+src/renderer/App.tsx
+  dc2569e19c23d4e1 49-51,99-103,111-115,626,662,699
+src/renderer/components/skills/SkillsView.tsx
+  dc2569e19c23d4e1 13,16,50
+src/renderer/types/electron.d.ts
+  dc2569e19c23d4e1 470-472
+docs/superpowers/plans/2026-03-23-enterprise-config-plan.md
+  dc2569e19c23d4e1 1-980
+src/main/libs/enterpriseConfigSync.ts
+  dc2569e19c23d4e1 1-503
+src/main/main.ts
+  dc2569e19c23d4e1 62,901-906,1028-1040,1584-1623,1626-1633,1664-1671,1820-2048,2050-2080,3684-3688,4261-4306,4308-4368,4455-4471
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "df31836cb5b7022460e1adea8459577a511db561",
+  "prompts": {
+    "dc2569e19c23d4e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7c97fea1-9006-41ac-83a8-7cffeee6e01d",
+        "model": "unknown"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 66,
+      "total_deletions": 12,
+      "accepted_lines": 2162,
+      "overriden_lines": 0
+    }
+  }
+}
