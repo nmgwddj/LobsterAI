@@ -212,6 +212,7 @@ const PROVIDER_DEFINITIONS = [
       openai: 'https://coding.dashscope.aliyuncs.com/v1',
       anthropic: 'https://coding.dashscope.aliyuncs.com/apps/anthropic',
     },
+    preferredCodingPlanFormat: 'openai',
     switchableBaseUrls: {
       anthropic: 'https://dashscope.aliyuncs.com/apps/anthropic',
       openai: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
