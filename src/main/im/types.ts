@@ -495,7 +495,8 @@ export type IMConnectivityCheckCode =
   | 'dingtalk_bot_membership_hint'
   | 'nim_p2p_only_hint'
   | 'openclaw_gateway_not_running'
-  | 'qq_guild_mention_hint';
+  | 'qq_guild_mention_hint'
+  | 'qq_mention_hint';
 
 export interface IMConnectivityCheck {
   code: IMConnectivityCheckCode;

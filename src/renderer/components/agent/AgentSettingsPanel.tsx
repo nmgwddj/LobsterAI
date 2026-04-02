@@ -4,7 +4,8 @@ import { RootState } from '../../store';
 import { agentService } from '../../services/agent';
 import { imService } from '../../services/im';
 import { i18nService } from '../../services/i18n';
-import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import TrashIcon from '../icons/TrashIcon';
 import type { Agent } from '../../types/agent';
 import type { Platform } from '@shared/platform';
 import type { IMGatewayConfig } from '../../types/im';
@@ -446,25 +447,25 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
                 className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <TrashIcon className="h-4 w-4" />
-                {i18nService.t('delete') || 'Delete'}
+                {i18nService.t('delete')}
               </button>
             )}
             {showDeleteConfirm && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-red-500">{i18nService.t('confirmDelete') || 'Confirm?'}</span>
+                <span className="text-xs text-red-500">{i18nService.t('confirmDelete')}</span>
                 <button
                   type="button"
                   onClick={handleDelete}
                   className="px-2 py-1 text-xs font-medium rounded bg-red-500 text-white hover:bg-red-600"
                 >
-                  {i18nService.t('delete') || 'Delete'}
+                  {i18nService.t('delete')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(false)}
                   className="px-2 py-1 text-xs font-medium rounded text-secondary hover:bg-surface-raised"
                 >
-                  {i18nService.t('cancel') || 'Cancel'}
+                  {i18nService.t('cancel')}
                 </button>
               </div>
             )}

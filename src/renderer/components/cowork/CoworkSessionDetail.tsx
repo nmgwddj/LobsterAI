@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { i18nService } from '../../services/i18n';
 import type { CoworkMessage, CoworkMessageMetadata, CoworkImageAttachment } from '../../types/cowork';
 import type { Skill } from '../../types/skill';
-import CoworkPromptInput from './CoworkPromptInput';
+import CoworkPromptInput, { type CoworkPromptInputRef } from './CoworkPromptInput';
 import MarkdownContent from '../MarkdownContent';
 import {
   CheckIcon,
@@ -28,6 +28,7 @@ import TrashIcon from '../icons/TrashIcon';
 import WindowTitleBar from '../window/WindowTitleBar';
 import { getCompactFolderName } from '../../utils/path';
 import { getScheduledReminderDisplayText } from '../../../scheduledTask/reminderText';
+import { setActiveSkillIds } from '../../store/slices/skillSlice';
 import DiffView, { extractDiffFromToolInput } from './DiffView';
 import Modal from '../common/Modal';
 
@@ -934,7 +935,47 @@ const CopyButton: React.FC<{
   );
 };
 
-export const UserMessageItem: React.FC<{ message: CoworkMessage; skills: Skill[] }> = React.memo(({ message, skills }) => {
+// Re-edit button component — lets the user re-fill a sent message back into the input
+const ReEditButton: React.FC<{
+  visible: boolean;
+  onClick: () => void;
+}> = ({ visible, onClick }) => {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`p-1.5 rounded-md dark:hover:bg-claude-darkSurfaceHover hover:bg-claude-surfaceHover transition-all duration-200 ${
+        visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      title={i18nService.t('coworkReEdit')}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4 h-4 text-[var(--icon-secondary)]"
+        aria-hidden="true"
+      >
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+        <path d="m15 5 4 4" />
+      </svg>
+    </button>
+  );
+};
+
+export const UserMessageItem: React.FC<{
+  message: CoworkMessage;
+  skills: Skill[];
+  onReEdit?: (message: CoworkMessage) => void;
+}> = React.memo(({ message, skills, onReEdit }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
@@ -985,22 +1026,32 @@ export const UserMessageItem: React.FC<{ message: CoworkMessage; skills: Skill[]
                 )}
               </div>
               <div className="flex items-center justify-end gap-1.5 mt-1">
-                {messageSkills.map(skill => (
-                  <div
-                    key={skill.id}
-                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary-muted"
-                    title={skill.description}
-                  >
-                    <PuzzleIcon className="h-2.5 w-2.5 text-primary" />
-                    <span className="text-[10px] font-medium text-primary max-w-[60px] truncate">
-                      {skill.name}
-                    </span>
-                  </div>
-                ))}
+                {onReEdit && (
+                  <ReEditButton
+                    visible={isHovered}
+                    onClick={() => onReEdit(message)}
+                  />
+                )}
                 <CopyButton
                   content={message.content}
                   visible={isHovered}
                 />
+                {messageSkills.length > 0 && (
+                  <div className="flex items-center gap-1.5 mr-1.5">
+                    {messageSkills.map(skill => (
+                      <div
+                        key={skill.id}
+                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary-muted"
+                        title={skill.description}
+                      >
+                        <PuzzleIcon className="h-2.5 w-2.5 text-primary" />
+                        <span className="text-[10px] font-medium text-primary max-w-[60px] truncate">
+                          {skill.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1334,6 +1385,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
   onNewChat,
   updateBadge,
 }) => {
+  const dispatch = useDispatch();
   const isMac = window.electron.platform === 'darwin';
   const currentSession = useSelector((state: RootState) => state.cowork.currentSession);
   const isStreaming = useSelector((state: RootState) => state.cowork.isStreaming);
@@ -1341,9 +1393,8 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
   const skills = useSelector((state: RootState) => state.skill.skills);
   const detailRootRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const promptInputRef = useRef<CoworkPromptInputRef>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
-  const prevMessageCountRef = useRef(0);
 
   // Clear lazy-render height cache when session changes
   const sessionId = currentSession?.id;
@@ -1390,8 +1441,6 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
 
   useEffect(() => {
     setShouldAutoScroll(true);
-    setHasUnreadMessages(false);
-    prevMessageCountRef.current = 0;
   }, [currentSession?.id]);
 
   // Focus rename input when entering rename mode
@@ -1817,9 +1866,6 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
     const isNearBottom = distanceToBottom <= AUTO_SCROLL_THRESHOLD;
     setShouldAutoScroll((prev) => (prev === isNearBottom ? prev : isNearBottom));
-    if (isNearBottom) {
-      setHasUnreadMessages(false);
-    }
 
     // Check if content overflows the container (use functional updater to avoid redundant re-renders)
     const scrollable = container.scrollHeight > container.clientHeight;
@@ -1957,6 +2003,25 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     return value;
   }, []);
 
+  const handleReEdit = useCallback((message: CoworkMessage) => {
+    const ref = promptInputRef.current;
+    if (!ref) return;
+    // Set text content
+    if (message.content?.trim()) {
+      ref.setValue(message.content);
+    }
+    // Restore image attachments (always call to clear previous attachments)
+    const imageAttachments = ((message.metadata as CoworkMessageMetadata)?.imageAttachments ?? []) as CoworkImageAttachment[];
+    ref.setImageAttachments(imageAttachments);
+    // Restore active skills
+    const skillIds = (message.metadata as CoworkMessageMetadata)?.skillIds;
+    if (skillIds && skillIds.length > 0) {
+      dispatch(setActiveSkillIds(skillIds));
+    }
+    // Focus the input
+    ref.focus();
+  }, [dispatch]);
+
   const messages = currentSession?.messages;
   const displayItems = useMemo(() => messages ? buildDisplayItems(messages) : [], [messages]);
   const turns = useMemo(() => buildConversationTurns(displayItems), [displayItems]);
@@ -2003,15 +2068,6 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     }
   }, [currentRailIndex]);
 
-  // Track new messages while scrolled away — show unread badge
-  const messageCount = currentSession?.messages?.length ?? 0;
-  useEffect(() => {
-    if (messageCount > prevMessageCountRef.current && !shouldAutoScroll) {
-      setHasUnreadMessages(true);
-    }
-    prevMessageCountRef.current = messageCount;
-  }, [messageCount, shouldAutoScroll]);
-
   // Auto scroll to bottom when new messages arrive or content updates (streaming)
   useEffect(() => {
     if (!shouldAutoScroll) {
@@ -2032,14 +2088,6 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     }
   }, [currentSession?.messages?.length, lastMessageContent, isStreaming, shouldAutoScroll, turns.length]);
 
-
-  const scrollToBottom = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-    setShouldAutoScroll(true);
-    setHasUnreadMessages(false);
-  }, []);
 
   if (!currentSession) {
     return null;
@@ -2086,7 +2134,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
         <LazyRenderTurn key={turn.id} turnId={turn.id} alwaysRender={alwaysRender} data-turn-index={index}>
           {turn.userMessage && (
             <div data-export-role="user-message" {...(userRailIdx >= 0 ? { 'data-rail-index': userRailIdx } : undefined)}>
-              <UserMessageItem message={turn.userMessage} skills={skills} />
+              <UserMessageItem message={turn.userMessage} skills={skills} onReEdit={handleReEdit} />
             </div>
           )}
           {showAssistantBlock && (
@@ -2333,7 +2381,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
         </div>
 
         {/* Turn Navigation Rail — to the left of scrollbar */}
-        {(turns.length > 1 || !shouldAutoScroll) && isScrollable && (
+        {turns.length > 1 && isScrollable && (
           <div
             className="absolute right-[18px] top-1/2 -translate-y-1/2 w-5 flex flex-col items-end z-10"
             style={{ maxHeight: 'calc(100% - 40px)' }}
@@ -2500,24 +2548,6 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
-
-            {/* Scroll to Bottom */}
-            {!shouldAutoScroll && (
-              <button
-                type="button"
-                onClick={scrollToBottom}
-                className="relative shrink-0 flex items-center justify-center w-5 h-5 mt-2 -mr-[5px] rounded-full transition-all text-neutral-600 dark:text-neutral-400
-                  cursor-pointer hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60"
-                title={i18nService.t('coworkScrollToBottom')}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 5.25l-7.5 7.5-7.5-7.5m15 6l-7.5 7.5-7.5-7.5" />
-                </svg>
-                {hasUnreadMessages && (
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-claude-accent animate-pulse" />
-                )}
-              </button>
-            )}
           </div>
         )}
 
@@ -2564,18 +2594,27 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
       {/* Input Area */}
       <div className="p-4 shrink-0">
         <div className="max-w-3xl mx-auto">
-          <CoworkPromptInput
-            onSubmit={onContinue}
-            onStop={onStop}
-            isStreaming={isStreaming}
-            placeholder={i18nService.t(remoteManaged ? 'coworkRemoteManagedPlaceholder' : 'coworkContinuePlaceholder')}
-            disabled={remoteManaged}
-            size="large"
-            remoteManaged={remoteManaged}
-            onManageSkills={remoteManaged ? undefined : onManageSkills}
-            showModelSelector={!remoteManaged}
-            sessionId={currentSession?.id}
-          />
+          {remoteManaged ? (
+            <div className="flex items-center gap-2 rounded-xl border dark:border-claude-darkBorder border-claude-border dark:bg-claude-darkSurface bg-claude-surface px-4 py-3">
+              <InformationCircleIcon className="h-5 w-5 shrink-0 dark:text-claude-darkTextSecondary text-claude-textSecondary" />
+              <span className="text-sm dark:text-claude-darkTextSecondary text-claude-textSecondary">
+                {i18nService.t('coworkRemoteManagedPlaceholder')}
+              </span>
+            </div>
+          ) : (
+            <CoworkPromptInput
+              ref={promptInputRef}
+              onSubmit={onContinue}
+              onStop={onStop}
+              isStreaming={isStreaming}
+              placeholder={i18nService.t('coworkContinuePlaceholder')}
+              disabled={false}
+              onManageSkills={onManageSkills}
+              size="large"
+              showModelSelector={true}
+              sessionId={currentSession?.id}
+            />
+          )}
         </div>
       </div>
     </div>

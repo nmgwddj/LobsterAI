@@ -842,8 +842,17 @@ const IMSettings: React.FC = () => {
       const result = await runConnectivityTest(platform, {
         dingtalk: dingtalkMultiConfig,
       } as Partial<IMGatewayConfig>);
-      // Auto-enable is handled per-instance in DingTalkInstanceSettings
-      void result;
+      // Auto-enable: if the active instance is OFF and auth_check passed, turn on automatically
+      if (activeDingTalkInstanceId && result) {
+        const inst = dingtalkMultiConfig.instances.find(i => i.instanceId === activeDingTalkInstanceId);
+        if (inst && !inst.enabled) {
+          const authCheck = result.checks.find((c) => c.code === 'auth_check');
+          if (authCheck && authCheck.level === 'pass') {
+            dispatch(setDingTalkInstanceConfig({ instanceId: activeDingTalkInstanceId, config: { enabled: true } }));
+            await imService.updateDingTalkInstanceConfig(activeDingTalkInstanceId, { enabled: true });
+          }
+        }
+      }
       return;
     }
 
@@ -853,8 +862,17 @@ const IMSettings: React.FC = () => {
       const result = await runConnectivityTest(platform, {
         qq: qqMultiConfig,
       } as Partial<IMGatewayConfig>);
-      // Auto-enable is handled per-instance in QQInstanceSettings
-      void result;
+      // Auto-enable: if the active instance is OFF and auth_check passed, turn on automatically
+      if (activeQQInstanceId && result) {
+        const inst = qqMultiConfig.instances.find(i => i.instanceId === activeQQInstanceId);
+        if (inst && !inst.enabled) {
+          const authCheck = result.checks.find((c) => c.code === 'auth_check');
+          if (authCheck && authCheck.level === 'pass') {
+            dispatch(setQQInstanceConfig({ instanceId: activeQQInstanceId, config: { enabled: true } }));
+            await imService.updateQQInstanceConfig(activeQQInstanceId, { enabled: true });
+          }
+        }
+      }
       return;
     }
 
@@ -894,8 +912,17 @@ const IMSettings: React.FC = () => {
       const result = await runConnectivityTest(platform, {
         feishu: feishuMultiConfig,
       } as Partial<IMGatewayConfig>);
-      // Auto-enable is handled per-instance in FeishuInstanceSettings
-      void result;
+      // Auto-enable: if the active instance is OFF and auth_check passed, turn on automatically
+      if (activeFeishuInstanceId && result) {
+        const inst = feishuMultiConfig.instances.find(i => i.instanceId === activeFeishuInstanceId);
+        if (inst && !inst.enabled) {
+          const authCheck = result.checks.find((c) => c.code === 'auth_check');
+          if (authCheck && authCheck.level === 'pass') {
+            dispatch(setFeishuInstanceConfig({ instanceId: activeFeishuInstanceId, config: { enabled: true } }));
+            await imService.updateFeishuInstanceConfig(activeFeishuInstanceId, { enabled: true });
+          }
+        }
+      }
       return;
     }
 
@@ -1326,7 +1353,11 @@ const IMSettings: React.FC = () => {
               }}
               onSave={async (override) => {
                 const configToSave = override ? { ...selectedInstance, ...override } : selectedInstance;
-                await imService.persistDingTalkInstanceConfig(activeDingTalkInstanceId, configToSave);
+                if (selectedInstance.enabled) {
+                  await imService.updateDingTalkInstanceConfig(activeDingTalkInstanceId, configToSave);
+                } else {
+                  await imService.persistDingTalkInstanceConfig(activeDingTalkInstanceId, configToSave);
+                }
               }}
               onRename={async (newName) => {
                 dispatch(setDingTalkInstanceConfig({ instanceId: activeDingTalkInstanceId, config: { instanceName: newName } as any }));
@@ -1339,8 +1370,12 @@ const IMSettings: React.FC = () => {
               }}
               onToggleEnabled={async () => {
                 const newEnabled = !selectedInstance.enabled;
-                dispatch(setDingTalkInstanceConfig({ instanceId: activeDingTalkInstanceId, config: { enabled: newEnabled } }));
-                await imService.updateDingTalkInstanceConfig(activeDingTalkInstanceId, { enabled: newEnabled });
+                if (newEnabled && !(selectedInstance.clientId && selectedInstance.clientSecret)) return;
+                const success = await imService.updateDingTalkInstanceConfig(activeDingTalkInstanceId, { enabled: newEnabled });
+                if (success) {
+                  dispatch(setDingTalkInstanceConfig({ instanceId: activeDingTalkInstanceId, config: { enabled: newEnabled } }));
+                  if (newEnabled) dispatch(clearError());
+                }
               }}
               onTestConnectivity={() => {
                 void handleConnectivityTest('dingtalk');
@@ -1389,7 +1424,11 @@ const IMSettings: React.FC = () => {
               }}
               onSave={async (override) => {
                 const configToSave = override ? { ...selectedInstance, ...override } : selectedInstance;
-                await imService.persistFeishuInstanceConfig(activeFeishuInstanceId, configToSave);
+                if (selectedInstance.enabled) {
+                  await imService.updateFeishuInstanceConfig(activeFeishuInstanceId, configToSave);
+                } else {
+                  await imService.persistFeishuInstanceConfig(activeFeishuInstanceId, configToSave);
+                }
               }}
               onRename={async (newName) => {
                 dispatch(setFeishuInstanceConfig({ instanceId: activeFeishuInstanceId, config: { instanceName: newName } as any }));
@@ -1402,8 +1441,12 @@ const IMSettings: React.FC = () => {
               }}
               onToggleEnabled={async () => {
                 const newEnabled = !selectedInstance.enabled;
-                dispatch(setFeishuInstanceConfig({ instanceId: activeFeishuInstanceId, config: { enabled: newEnabled } }));
-                await imService.updateFeishuInstanceConfig(activeFeishuInstanceId, { enabled: newEnabled });
+                if (newEnabled && !(selectedInstance.appId && selectedInstance.appSecret)) return;
+                const success = await imService.updateFeishuInstanceConfig(activeFeishuInstanceId, { enabled: newEnabled });
+                if (success) {
+                  dispatch(setFeishuInstanceConfig({ instanceId: activeFeishuInstanceId, config: { enabled: newEnabled } }));
+                  if (newEnabled) dispatch(clearError());
+                }
               }}
               onTestConnectivity={() => {
                 void handleConnectivityTest('feishu');
@@ -1452,7 +1495,11 @@ const IMSettings: React.FC = () => {
               }}
               onSave={async (override) => {
                 const configToSave = override ? { ...selectedInstance, ...override } : selectedInstance;
-                await imService.persistQQInstanceConfig(activeQQInstanceId, configToSave);
+                if (selectedInstance.enabled) {
+                  await imService.updateQQInstanceConfig(activeQQInstanceId, configToSave);
+                } else {
+                  await imService.persistQQInstanceConfig(activeQQInstanceId, configToSave);
+                }
               }}
               onRename={async (newName) => {
                 dispatch(setQQInstanceConfig({ instanceId: activeQQInstanceId, config: { instanceName: newName } as any }));
@@ -1465,8 +1512,12 @@ const IMSettings: React.FC = () => {
               }}
               onToggleEnabled={async () => {
                 const newEnabled = !selectedInstance.enabled;
-                dispatch(setQQInstanceConfig({ instanceId: activeQQInstanceId, config: { enabled: newEnabled } }));
-                await imService.updateQQInstanceConfig(activeQQInstanceId, { enabled: newEnabled });
+                if (newEnabled && !(selectedInstance.appId && selectedInstance.appSecret)) return;
+                const success = await imService.updateQQInstanceConfig(activeQQInstanceId, { enabled: newEnabled });
+                if (success) {
+                  dispatch(setQQInstanceConfig({ instanceId: activeQQInstanceId, config: { enabled: newEnabled } }));
+                  if (newEnabled) dispatch(clearError());
+                }
               }}
               onTestConnectivity={() => {
                 void handleConnectivityTest('qq');
@@ -1747,7 +1798,7 @@ const IMSettings: React.FC = () => {
                       void handleSaveTelegramOpenClawConfig(update);
                     }}
                     className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      tgOpenClawConfig.linkPreview ? 'bg-primary' : 'bg-surface'
+                      tgOpenClawConfig.linkPreview ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
                     }`}
                   >
                     <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -2632,7 +2683,7 @@ const IMSettings: React.FC = () => {
                       void handleSaveWecomOpenClawConfig(update);
                     }}
                     className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      wecomOpenClawConfig.sendThinkingMessage ? 'bg-primary' : 'bg-surface'
+                      wecomOpenClawConfig.sendThinkingMessage ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
                     }`}
                   >
                     <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -3112,7 +3163,7 @@ const IMSettings: React.FC = () => {
                       void handleSavePopoConfig({ debug: next });
                     }}
                     className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      popoConfig.debug ? 'bg-primary' : 'bg-surface'
+                      popoConfig.debug ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
                     }`}
                   >
                     <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${

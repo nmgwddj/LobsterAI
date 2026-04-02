@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { XCircleIcon as XCircleIconSolid } from '@heroicons/react/20/solid';
-import { EyeIcon, EyeSlashIcon, SignalIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, XCircleIcon as XCircleIconSolid } from '@heroicons/react/20/solid';
+import { SignalIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import TrashIcon from '../icons/TrashIcon';
 import type { DingTalkInstanceConfig, DingTalkInstanceStatus, DingTalkOpenClawConfig, IMConnectivityTestResult } from '../../types/im';
 import { i18nService } from '../../services/i18n';
 import { PlatformRegistry } from '@shared/platform';
@@ -184,41 +185,42 @@ const DingTalkInstanceSettings: React.FC<DingTalkInstanceSettingsProps> = ({
               className="text-sm font-medium text-foreground bg-transparent border-b border-primary focus:outline-none px-0 py-0"
             />
           ) : (
-            <h3
-              className="text-sm font-medium text-foreground cursor-pointer hover:text-primary transition-colors truncate"
+            <span
+              className="text-sm font-medium text-foreground cursor-pointer hover:text-primary transition-colors truncate border-b border-dashed border-gray-400 dark:border-secondary/50 hover:border-primary pb-px"
               onClick={() => setEditingName(true)}
               title={language === 'zh' ? '点击重命名' : 'Click to rename'}
             >
               {instance.instanceName}
-            </h3>
+            </span>
           )}
         </div>
 
         {/* Status badge */}
         <div className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
-          !instance.enabled
-            ? 'bg-gray-500/15 text-gray-500 dark:text-gray-400'
-            : instanceStatus?.connected
-              ? 'bg-green-500/15 text-green-600 dark:text-green-400'
-              : 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-300'
+          instanceStatus?.connected
+            ? 'bg-green-500/15 text-green-600 dark:text-green-400'
+            : 'bg-gray-500/15 text-gray-500 dark:text-gray-400'
         }`}>
-          {!instance.enabled
-            ? i18nService.t('disabled')
-            : instanceStatus?.connected
-              ? i18nService.t('connected')
-              : i18nService.t('disconnected')}
+          {instanceStatus?.connected
+            ? i18nService.t('connected')
+            : i18nService.t('disconnected')}
         </div>
 
         {/* Enable toggle */}
         <button
           type="button"
           onClick={onToggleEnabled}
-          className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-            instance.enabled ? 'bg-primary' : 'bg-surface'
-          }`}
+          disabled={!instance.enabled && !(instance.clientId && instance.clientSecret)}
+          className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+            instance.enabled
+              ? (instanceStatus?.connected ? 'bg-green-500' : 'bg-yellow-500')
+              : 'bg-gray-400 dark:bg-gray-600'
+          } ${!instance.enabled && !(instance.clientId && instance.clientSecret) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           title={instance.enabled
             ? (language === 'zh' ? '禁用此实例' : 'Disable this instance')
-            : (language === 'zh' ? '启用此实例' : 'Enable this instance')}
+            : (!(instance.clientId && instance.clientSecret)
+              ? i18nService.t('imInstanceFillCredentials')
+              : (language === 'zh' ? '启用此实例' : 'Enable this instance'))}
         >
           <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
             instance.enabled ? 'translate-x-4' : 'translate-x-0'
@@ -229,10 +231,10 @@ const DingTalkInstanceSettings: React.FC<DingTalkInstanceSettingsProps> = ({
         <button
           type="button"
           onClick={onDelete}
-          className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
           title={language === 'zh' ? '删除此实例' : 'Delete this instance'}
         >
-          <TrashIcon className="h-3.5 w-3.5" />
+          <TrashIcon className="h-4 w-4" />
           {language === 'zh' ? '删除' : 'Delete'}
         </button>
       </div>

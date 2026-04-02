@@ -270,6 +270,12 @@ const getFixedApiFormatForProvider = (provider: string): 'anthropic' | 'openai' 
   if (provider === 'youdaozhiyun' || provider === 'github-copilot') {
     return 'openai';
   }
+  // Moonshot /anthropic endpoint does not fully implement the Anthropic Messages
+  // spec (tool use, streaming, etc.), so the Claude Agent SDK cannot use it.
+  // Force OpenAI format — requests go through the built-in compat proxy instead.
+  if (provider === 'moonshot') {
+    return 'openai';
+  }
   if (provider === 'anthropic') {
     return 'anthropic';
   }
@@ -296,7 +302,13 @@ const resolveBaseUrl = (
   baseUrl: string,
   apiFormat: 'anthropic' | 'openai' | 'gemini'
 ): string => {
-  if (baseUrl.trim()) return baseUrl;
+  if (baseUrl.trim()) {
+    if (shouldAutoSwitchProviderBaseUrl(provider, baseUrl) && (apiFormat === 'anthropic' || apiFormat === 'openai')) {
+      const switchedUrl = ProviderRegistry.getSwitchableBaseUrl(provider, apiFormat);
+      if (switchedUrl) return switchedUrl;
+    }
+    return baseUrl;
+  }
   return getProviderDefaultBaseUrl(provider, apiFormat)
     || defaultConfig.providers?.[provider]?.baseUrl
     || '';
@@ -538,9 +550,11 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
   // Qwen OAuth state
   const [qwenOAuthProgress, setQwenOAuthProgress] = useState<string | null>(null);
   const [qwenOAuthLoading, setQwenOAuthLoading] = useState(false);
-  const [qwenAuthTab, setQwenAuthTab] = useState<'apikey' | 'oauth'>('apikey');
-  
-  const isBaseUrlLocked = (activeProvider === 'zhipu' && providers.zhipu.codingPlanEnabled) || (activeProvider === 'qwen' && providers.qwen.codingPlanEnabled) || (activeProvider === 'volcengine' && providers.volcengine.codingPlanEnabled) || (activeProvider === 'moonshot' && providers.moonshot.codingPlanEnabled) || (activeProvider === 'minimax' && providers.minimax.authType === 'oauth');
+  const [qwenAuthTab, setQwenAuthTab] = useState<'apikey' | 'oauth'>('oauth');
+
+  // authType defaults to undefined on first open, which should behave as OAuth mode
+  const minimaxIsOAuthMode = providers.minimax.authType !== 'apikey';
+  const isBaseUrlLocked = (activeProvider === 'zhipu' && providers.zhipu.codingPlanEnabled) || (activeProvider === 'qwen' && providers.qwen.codingPlanEnabled) || (activeProvider === 'volcengine' && providers.volcengine.codingPlanEnabled) || (activeProvider === 'moonshot' && providers.moonshot.codingPlanEnabled) || (activeProvider === 'minimax' && minimaxIsOAuthMode);
   
   // 创建引用来确保内容区域的滚动
   const contentRef = useRef<HTMLDivElement>(null);
@@ -1118,52 +1132,23 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
         };
       }
 
-      // Handle codingPlanEnabled toggle for zhipu
-      if (field === 'codingPlanEnabled' && provider === 'zhipu') {
-        const codingPlanEnabled = value === 'true';
-        return {
-          ...prev,
-          zhipu: {
-            ...prev.zhipu,
-            codingPlanEnabled,
-          },
-        };
-      }
-
-      // Handle codingPlanEnabled toggle for qwen
-      if (field === 'codingPlanEnabled' && provider === 'qwen') {
-        const codingPlanEnabled = value === 'true';
-        return {
-          ...prev,
-          qwen: {
-            ...prev.qwen,
-            codingPlanEnabled,
-          },
-        };
-      }
-
-      // Handle codingPlanEnabled toggle for volcengine
-      if (field === 'codingPlanEnabled' && provider === 'volcengine') {
-        const codingPlanEnabled = value === 'true';
-        return {
-          ...prev,
-          volcengine: {
-            ...prev.volcengine,
-            codingPlanEnabled,
-          },
-        };
-      }
-
-      // Handle codingPlanEnabled toggle for moonshot
-      if (field === 'codingPlanEnabled' && provider === 'moonshot') {
-        const codingPlanEnabled = value === 'true';
-        return {
-          ...prev,
-          moonshot: {
-            ...prev.moonshot,
-            codingPlanEnabled,
-          },
-        };
+      // Handle codingPlanEnabled toggle for all supported providers
+      if (field === 'codingPlanEnabled') {
+        const def = ProviderRegistry.get(provider);
+        if (def?.codingPlanSupported) {
+          const enabled = value === 'true';
+          const nextModels = enabled && def.codingPlanModels
+            ? def.codingPlanModels.map(m => ({ ...m }))
+            : def.defaultModels.map(m => ({ ...m }));
+          return {
+            ...prev,
+            [provider]: {
+              ...prev[provider],
+              codingPlanEnabled: enabled,
+              models: nextModels,
+            },
+          };
+        }
       }
 
       return {
@@ -2771,7 +2756,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                       }}
                       className="flex flex-col items-center rounded-xl border-2 p-2 transition-colors cursor-pointer"
                       style={{
-                        borderColor: isSelected ? 'var(--lobster-primary)' : undefined,
+                        borderColor: isSelected ? 'var(--lobster-primary)' : 'var(--lobster-border)',
                         backgroundColor: isSelected ? 'var(--lobster-primary-muted)' : undefined,
                       }}
                     >
@@ -3126,7 +3111,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                       <button
                         type="button"
                         onClick={() => setProviders(prev => ({ ...prev, minimax: { ...prev.minimax, authType: 'oauth' } }))}
-                        className={`flex-1 py-1.5 text-xs font-medium transition-colors ${providers.minimax.authType === 'oauth' ? 'bg-primary text-white' : 'text-secondary hover:bg-surface-raised'}`}
+                        className={`flex-1 py-1.5 text-xs font-medium transition-colors ${minimaxIsOAuthMode ? 'bg-primary text-white' : 'text-secondary hover:bg-surface-raised'}`}
                       >
                         {i18nService.t('minimaxOAuthTabOAuth')}
                       </button>
@@ -3136,7 +3121,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                           setProviders(prev => ({ ...prev, minimax: { ...prev.minimax, authType: 'apikey' } }));
                           setMinimaxOAuthPhase({ kind: 'idle' });
                         }}
-                        className={`flex-1 py-1.5 text-xs font-medium transition-colors ${providers.minimax.authType !== 'oauth' ? 'bg-primary text-white' : 'text-secondary hover:bg-surface-raised'}`}
+                        className={`flex-1 py-1.5 text-xs font-medium transition-colors ${!minimaxIsOAuthMode ? 'bg-primary text-white' : 'text-secondary hover:bg-surface-raised'}`}
                       >
                         {i18nService.t('minimaxOAuthTabApiKey')}
                       </button>
@@ -3144,8 +3129,8 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                   </div>
 
                   {/* API Key mode */}
-                  {providers.minimax.authType !== 'oauth' && (
-                    <div>
+                  {!minimaxIsOAuthMode && (
+                    <div className="min-h-[68px]">
                       <div className="flex items-center justify-between mb-1">
                         <label htmlFor="minimax-apiKey" className="block text-xs font-medium dark:text-claude-darkText text-claude-text">
                           {i18nService.t('apiKey')}
@@ -3194,8 +3179,8 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                   )}
 
                   {/* OAuth mode */}
-                  {providers.minimax.authType === 'oauth' && (
-                    <div className="space-y-2">
+                  {minimaxIsOAuthMode && (
+                    <div className="space-y-2 min-h-[68px]">
                       {/* Already logged in */}
                       {minimaxOAuthPhase.kind === 'idle' && providers.minimax.apiKey && (
                         <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 space-y-2">
@@ -3399,43 +3384,41 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                   {activeProvider === 'qwen' && (
                     <div className="space-y-4">
                       {/* Tab switching for authentication methods */}
-                      <div className="flex space-x-1 bg-claude-surface/50 dark:bg-claude-darkSurface/50 rounded-lg p-1">
-                        <button
-                          type="button"
-                          onClick={() => setQwenAuthTab('apikey')}
-                          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md relative ${
-                            qwenAuthTab === 'apikey'
-                              ? 'bg-white dark:bg-claude-darkSurface text-claude-text dark:text-claude-darkText'
-                              : 'text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-text dark:hover:text-claude-darkText'
-                          }`}
-                        >
-                          API Key
-                          {qwenAuthTab === 'apikey' && (
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-claude-accent rounded-full"></div>
-                          )}
-                        </button>
+                      <div className="flex rounded-xl overflow-hidden border border-border mb-3">
                         <button
                           type="button"
                           onClick={() => setQwenAuthTab('oauth')}
-                          className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md relative ${
+                          className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
                             qwenAuthTab === 'oauth'
-                              ? 'bg-white dark:bg-claude-darkSurface text-claude-text dark:text-claude-darkText'
-                              : 'text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-text dark:hover:text-claude-darkText'
+                              ? 'bg-primary text-white'
+                              : 'text-secondary hover:bg-surface-raised'
                           }`}
                         >
                           {i18nService.t('qwenOAuthTab')}
                           {providers.qwen.oauthCredentials && (
-                            <span className="ml-1 inline-block w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                            <span className="ml-1 inline-block w-1.5 h-1.5 bg-green-500 rounded-full align-middle"></span>
                           )}
-                          {qwenAuthTab === 'oauth' && (
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-claude-accent rounded-full"></div>
-                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQwenAuthTab('apikey');
+                            setQwenOAuthProgress(null);
+                            setQwenOAuthLoading(false);
+                          }}
+                          className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
+                            qwenAuthTab === 'apikey'
+                              ? 'bg-primary text-white'
+                              : 'text-secondary hover:bg-surface-raised'
+                          }`}
+                        >
+                          API Key
                         </button>
                       </div>
 
                       {/* API Key Tab */}
                       {qwenAuthTab === 'apikey' && (
-                        <div>
+                        <div className="min-h-[68px]">
                           <div className="flex items-center justify-between mb-1">
                             <label htmlFor="qwen-apiKey" className="block text-xs font-medium dark:text-claude-darkText text-claude-text">
                               API Key
@@ -3485,7 +3468,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
 
                       {/* OAuth Tab */}
                       {qwenAuthTab === 'oauth' && (
-                        <div>
+                        <div className="min-h-[68px]">
                           <label className="block text-xs font-medium dark:text-claude-darkText text-claude-text mb-2">
                             {i18nService.t('qwenOAuthLoginFree')}
                           </label>
@@ -3663,7 +3646,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                 </div>
               )}
 
-              {!(activeProvider === 'minimax' && providers.minimax.authType === 'oauth') && (
+              {!(activeProvider === 'minimax' && minimaxIsOAuthMode) && (
               <div>
                 <label htmlFor={`${activeProvider}-baseUrl`} className="block text-xs font-medium text-foreground mb-1">
                   {i18nService.t('baseUrl')}
@@ -3783,7 +3766,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
               )}
 
               {/* API 格式选择器 */}
-              {shouldShowApiFormatSelector(activeProvider) && !(activeProvider === 'minimax' && providers.minimax.authType === 'oauth') && (
+              {shouldShowApiFormatSelector(activeProvider) && !(activeProvider === 'minimax' && minimaxIsOAuthMode) && (
                 <div>
                   <label htmlFor={`${activeProvider}-apiFormat`} className="block text-xs font-medium text-foreground mb-1">
                     {i18nService.t('apiFormat')}
@@ -3937,7 +3920,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
               )}
 
               {/* 测试连接按钮 */}
-              {!(activeProvider === 'minimax' && providers.minimax.authType === 'oauth') && (
+              {!(activeProvider === 'minimax' && minimaxIsOAuthMode) && (
               <div className="flex items-center space-x-3">
                 <button
                   type="button"

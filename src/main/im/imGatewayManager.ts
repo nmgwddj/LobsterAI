@@ -547,6 +547,11 @@ export class IMGatewayManager extends EventEmitter {
       return this.testPopoOpenClawConnectivity(configOverride);
     }
 
+    // QQ always uses OpenClaw mode
+    if (platform === 'qq') {
+      return this.testQQOpenClawConnectivity(configOverride);
+    }
+
     // NetEase Bee is an internal relay channel with no standalone gateway to test
     if (platform === 'netease-bee') {
       return {
@@ -1605,6 +1610,87 @@ export class IMGatewayManager extends EventEmitter {
       code: 'gateway_running',
       level: 'info',
       message: t('imPopoOpenClawHint'),
+    });
+
+    const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')
+      ? 'fail'
+      : checks.some(c => c.level === 'warn')
+        ? 'warn'
+        : 'pass';
+
+    return { platform, testedAt, verdict, checks };
+  }
+
+  private async testQQOpenClawConnectivity(
+    configOverride?: Partial<IMGatewayConfig>
+  ): Promise<IMConnectivityTestResult> {
+    const checks: IMConnectivityCheck[] = [];
+    const testedAt = Date.now();
+    const platform: Platform = 'qq';
+
+    const mergedConfig = this.buildMergedConfig(configOverride);
+    const qqInstances = mergedConfig.qq?.instances || [];
+    const qqConfig = qqInstances.find(i => i.enabled) || qqInstances[0];
+
+    // Check 1: Credentials present
+    if (!qqConfig?.appId || !qqConfig?.appSecret) {
+      const missing: string[] = [];
+      if (!qqConfig?.appId) missing.push('appId');
+      if (!qqConfig?.appSecret) missing.push('appSecret');
+      checks.push({
+        code: 'missing_credentials',
+        level: 'fail',
+        message: t('imMissingCredentials', { fields: missing.join(', ') }),
+        suggestion: t('imQqFillAppIdSecret'),
+      });
+      return { platform, testedAt, verdict: 'fail', checks };
+    }
+
+    // Check 2: Auth probe via QQ Bot API
+    try {
+      const tokenResponse = await this.withTimeout(
+        fetchJsonWithTimeout<{ access_token?: string; expires_in?: number; code?: number; message?: string }>(
+          'https://bots.qq.com/app/getAppAccessToken',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ appId: qqConfig.appId, clientSecret: qqConfig.appSecret }),
+          },
+          CONNECTIVITY_TIMEOUT_MS
+        ),
+        CONNECTIVITY_TIMEOUT_MS,
+        t('imAuthProbeTimeout')
+      );
+      if (!tokenResponse.access_token) {
+        throw new Error(tokenResponse.message || t('imQqAccessTokenFailed'));
+      }
+      checks.push({
+        code: 'auth_check',
+        level: 'pass',
+        message: t('imQqAuthPassed'),
+      });
+    } catch (error: any) {
+      checks.push({
+        code: 'auth_check',
+        level: 'fail',
+        message: t('imQqAuthFailed', { error: error.message }),
+        suggestion: t('imQqCheckAppIdSecret'),
+      });
+      return { platform, testedAt, verdict: 'fail', checks };
+    }
+
+    // Check 3: OpenClaw Gateway running info
+    checks.push({
+      code: 'gateway_running',
+      level: 'info',
+      message: t('imQqOpenClawHint'),
+    });
+
+    // Check 4: Mention hint
+    checks.push({
+      code: 'qq_mention_hint',
+      level: 'info',
+      message: t('imQqMentionHint'),
     });
 
     const verdict: IMConnectivityVerdict = checks.some(c => c.level === 'fail')

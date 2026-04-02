@@ -111,6 +111,9 @@ const translations: Record<LanguageType, Record<string, string>> = {
     imQqMentionHint: '频道中需 @机器人 触发对话，也支持私信和群聊。',
     imQqAuthPassed: 'QQ 鉴权通过（AccessToken 已获取）。',
     imQqAccessTokenFailed: '获取 AccessToken 失败',
+    imQqFillAppIdSecret: '请补全 AppID 和 AppSecret 后重新测试连通性。',
+    imQqAuthFailed: 'QQ 鉴权失败: {error}',
+    imQqCheckAppIdSecret: '请检查 AppID 和 AppSecret 是否正确，且机器人权限已开通。',
 
     // Telegram
     imTelegramMissingBotToken: '缺少必要配置项: botToken',
@@ -280,6 +283,9 @@ const translations: Record<LanguageType, Record<string, string>> = {
     imQqMentionHint: '@mention the bot in channels to start a conversation. Direct messages and group chats are also supported.',
     imQqAuthPassed: 'QQ authentication passed (AccessToken obtained).',
     imQqAccessTokenFailed: 'Failed to obtain AccessToken',
+    imQqFillAppIdSecret: 'Please provide the AppID and AppSecret and test connectivity again.',
+    imQqAuthFailed: 'QQ authentication failed: {error}',
+    imQqCheckAppIdSecret: 'Please check that the AppID and AppSecret are correct and that bot permissions are enabled.',
 
     // Telegram
     imTelegramMissingBotToken: 'Missing required configuration: botToken',
