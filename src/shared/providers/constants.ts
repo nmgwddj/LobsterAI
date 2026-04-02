@@ -355,12 +355,10 @@ const PROVIDER_DEFINITIONS = [
     region: 'global',
     enPriority: 0,
     defaultModels: [
-      { id: 'gpt-5-mini', name: 'GPT-5-mini', supportsImage: true },
+      { id: 'gpt-5-mini', name: 'GPT-5 mini', supportsImage: true },
       { id: 'claude-haiku-4.5', name: 'Claude Haiku 4.5', supportsImage: true },
-      { id: 'claude-sonnet-4.6', name: 'Claude Sonnet 4.6', supportsImage: true },
-      { id: 'claude-sonnet-4.5', name: 'Claude Sonnet 4.5', supportsImage: true },
+      { id: 'gpt-4.1', name: 'GPT-4.1', supportsImage: true },
       { id: 'gpt-4o', name: 'GPT-4o', supportsImage: true },
-      { id: 'o3-mini', name: 'o3-mini', supportsImage: false },
     ],
   },
   {
