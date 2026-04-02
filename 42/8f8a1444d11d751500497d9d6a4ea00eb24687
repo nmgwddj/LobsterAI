@@ -1,0 +1,27 @@
+src/main/im/imCoworkHandler.ts
+  307b8e8eb2c6e21f 334
+src/main/libs/openclawConfigSync.ts
+  307b8e8eb2c6e21f 24-25,28,653,673,692,815-816
+src/main/main.ts
+  307b8e8eb2c6e21f 771
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.3",
+  "base_commit_sha": "428f8a1444d11d751500497d9d6a4ea00eb24687",
+  "prompts": {
+    "307b8e8eb2c6e21f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "be7b8dd8-2561-4d88-99e2-91c429ac2c47",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 7,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  }
+}
