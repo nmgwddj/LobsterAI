@@ -42,9 +42,14 @@ const McpServerFormModal: React.FC<McpServerFormModalProps> = ({
       setTransportType(server.transportType);
       setCommand(server.command || '');
       setArgsText((server.args || []).join('\n'));
+      const requiredKeys = new Set(registryEntry?.requiredEnvKeys ?? []);
       setEnvRows(
         server.env
-          ? Object.entries(server.env).map(([key, value]) => ({ key, value }))
+          ? Object.entries(server.env).map(([key, value]) => ({
+              key,
+              value,
+              required: requiredKeys.has(key) || undefined,
+            }))
           : []
       );
       setUrl(server.url || '');
