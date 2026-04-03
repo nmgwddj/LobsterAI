@@ -7,12 +7,14 @@ import { i18nService } from '../../services/i18n';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import TrashIcon from '../icons/TrashIcon';
 import type { Agent } from '../../types/agent';
+import type { Model } from '../../store/slices/modelSlice';
 import type { Platform } from '@shared/platform';
 import type { IMGatewayConfig } from '../../types/im';
 import { getVisibleIMPlatforms } from '../../utils/regionFilter';
 import { PlatformRegistry } from '@shared/platform';
 import AgentSkillSelector from './AgentSkillSelector';
 import EmojiPicker from './EmojiPicker';
+import ModelSelector from '../ModelSelector';
 import Modal from '../common/Modal';
 
 type SettingsTab = 'basic' | 'skills' | 'im';
@@ -29,12 +31,14 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
   const currentAgentId = useSelector((state: RootState) => state.agent.currentAgentId);
   const agents = useSelector((state: RootState) => state.agent.agents);
   const imStatus = useSelector((state: RootState) => state.im.status);
+  const availableModels = useSelector((state: RootState) => state.model.availableModels);
   const [, setAgent] = useState<Agent | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [identity, setIdentity] = useState('');
   const [icon, setIcon] = useState('');
+  const [model, setModel] = useState<Model | null>(null);
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -57,6 +61,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
         setSystemPrompt(a.systemPrompt);
         setIdentity(a.identity);
         setIcon(a.icon);
+        setModel(availableModels.find((candidate) => candidate.id === a.model) ?? null);
         setSkillIds(a.skillIds ?? []);
       }
     });
@@ -76,7 +81,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
       }
     });
     imService.loadStatus();
-  }, [agentId]);
+  }, [agentId, availableModels]);
 
   if (!agentId) return null;
 
@@ -89,6 +94,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
         description: description.trim(),
         systemPrompt: systemPrompt.trim(),
         identity: identity.trim(),
+        model: model?.id ?? '',
         icon: icon.trim(),
         skillIds,
       });
@@ -410,6 +416,21 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
                   placeholder={i18nService.t('agentIdentityPlaceholder') || 'Identity description (IDENTITY.md)...'}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-foreground text-sm resize-none"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1">
+                  {i18nService.t('agentDefaultModel') || 'Agent Default Model'}
+                </label>
+                <ModelSelector
+                  value={model}
+                  onChange={setModel}
+                  defaultLabel={i18nService.t('agentModelUseGlobalDefault') || 'Use global default model'}
+                />
+                {availableModels.length > 0 && (
+                  <p className="mt-1 text-xs text-secondary/70">
+                    {i18nService.t('agentModelOpenClawOnly') || 'This setting only applies to the OpenClaw engine'}
+                  </p>
+                )}
               </div>
             </div>
           )}

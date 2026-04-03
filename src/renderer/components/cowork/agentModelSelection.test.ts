@@ -19,4 +19,16 @@ describe('resolveAgentModelSelection', () => {
     expect(result.selectedModel?.id).toBe('claude-sonnet-4');
     expect(result.usesFallback).toBe(false);
   });
+
+  test('falls back to the global model in openclaw when agent model is empty', () => {
+    const result = resolveAgentModelSelection({
+      agentModel: '',
+      availableModels: models,
+      fallbackModel: models[0],
+      engine: 'openclaw',
+    });
+
+    expect(result.selectedModel?.id).toBe('gpt-4o');
+    expect(result.usesFallback).toBe(true);
+  });
 });
