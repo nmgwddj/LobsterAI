@@ -13,6 +13,10 @@ export interface ProviderConfig {
   displayName?: string;
   codingPlanEnabled?: boolean;
   authType?: 'apikey' | 'oauth';
+  /** OAuth access token (stored separately from apiKey to avoid conflicts) */
+  oauthAccessToken?: string;
+  /** Base URL returned by OAuth resource_url (stored separately from user-configured baseUrl) */
+  oauthBaseUrl?: string;
   oauthRefreshToken?: string;
   oauthTokenExpiresAt?: number;
 }

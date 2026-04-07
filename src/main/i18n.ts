@@ -38,13 +38,6 @@ const translations: Record<LanguageType, Record<string, string>> = {
     taskTimedOut: '[任务超时] 任务因超过最大允许时长而被自动停止。你可以继续对话以从中断处继续。',
     imSessionStoppedReply: '任务已被手动停止。你可以继续发送消息开始新的对话。',
 
-    // OAuth flow messages
-    qwenOAuthRequestingDeviceCode: '正在请求设备授权码...',
-    qwenOAuthOpeningBrowser: '正在打开浏览器进行授权...',
-    qwenOAuthWaitingForUser: '等待用户授权...',
-    qwenOAuthSuccess: 'OAuth 授权成功',
-    qwenOAuthFailed: 'OAuth 授权失败',
-    qwenOAuthTimeout: 'OAuth 授权超时',
     // Thinking-only hint
     taskThinkingOnly: '[模型未输出内容] 模型已完成思考但未生成可见回复。你可以继续对话，让模型重新输出结果。',
 
@@ -211,15 +204,6 @@ const translations: Record<LanguageType, Record<string, string>> = {
 
     // Timeout hint
     taskTimedOut: '[Task timed out] The task was automatically stopped because it exceeded the maximum allowed duration. You can continue the conversation to pick up where it left off.',
-    imSessionStoppedReply: 'The task was manually stopped. You can send a new message to start a fresh conversation.',
-
-    // OAuth flow messages
-    qwenOAuthRequestingDeviceCode: 'Requesting device authorization code...',
-    qwenOAuthOpeningBrowser: 'Opening browser for authorization...',
-    qwenOAuthWaitingForUser: 'Waiting for user authorization...',
-    qwenOAuthSuccess: 'OAuth authorization successful',
-    qwenOAuthFailed: 'OAuth authorization failed',
-    qwenOAuthTimeout: 'OAuth authorization timeout',
     // Thinking-only hint
     taskThinkingOnly: '[No output] The model finished thinking but did not generate a visible reply. You can continue the conversation to ask it to output the result.',
 
