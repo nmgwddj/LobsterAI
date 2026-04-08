@@ -837,6 +837,19 @@ export class OpenClawConfigSync {
     const hasMcpBridgePlugin = isBundledPluginAvailable('mcp-bridge');
     const hasAskUserPlugin = isBundledPluginAvailable('ask-user-question');
 
+    // Read existing config to preserve gateway fields that OpenClaw runtime
+    // seeds at startup (auth, tailscale, controlUi).  Without this, every
+    // configSync cycle removes them, the gateway detects the diff, and
+    // restarts — creating a restart loop.
+    // See: openclaw/openclaw#58678, #33310
+    let existingGateway: Record<string, unknown> = {};
+    try {
+      const existing = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      existingGateway = (existing.gateway ?? {}) as Record<string, unknown>;
+    } catch {
+      // First run or corrupt file — nothing to preserve.
+    }
+
     // Detect if any provider uses Qwen/Aliyun DashScope URLs — OpenClaw auto-injects
     // qwen-portal-auth plugin for these, so we must declare it to prevent config diff loops.
     const hasQwenProvider = Object.values(allProvidersMap).some((p) => {
@@ -868,6 +881,12 @@ export class OpenClawConfigSync {
 
     const managedConfig: Record<string, unknown> = {
       gateway: {
+        // Preserve gateway fields that the runtime seeds at startup (auth,
+        // tailscale, controlUi).  Without this they get removed on every sync
+        // cycle, causing a config diff → gateway restart loop.
+        ...(existingGateway.auth ? { auth: existingGateway.auth } : {}),
+        ...(existingGateway.tailscale ? { tailscale: existingGateway.tailscale } : {}),
+        ...(existingGateway.controlUi ? { controlUi: existingGateway.controlUi } : {}),
         mode: 'local',
         ...(hasAnyChannel ? {
           http: {
@@ -965,6 +984,13 @@ export class OpenClawConfigSync {
           ...(hasQwenProvider
             ? { 'qwen-portal-auth': { enabled: true } }
             : {}),
+          // OpenClaw v2026.4.1+ auto-injects minimax, volcengine, and browser
+          // plugin entries at startup.  Declare them explicitly so configSync
+          // doesn't remove them and trigger restart loops.
+          // See: openclaw/openclaw#61613
+          'minimax': { enabled: true },
+          'volcengine': { enabled: true },
+          'browser': { enabled: true },
         };
 
         return Object.keys(pluginEntries).length > 0
