@@ -60,7 +60,7 @@ type GatewayClientLike = {
   request: <T = Record<string, unknown>>(
     method: string,
     params?: unknown,
-    opts?: { expectFinal?: boolean },
+    opts?: { expectFinal?: boolean; timeoutMs?: number | null },
   ) => Promise<T>;
 };
 
@@ -681,7 +681,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       const history = await client.request<{ messages?: unknown[] }>('chat.history', {
         sessionKey,
         limit: OpenClawRuntimeAdapter.FULL_HISTORY_SYNC_LIMIT,
-      });
+      }, { timeoutMs: 10_000 });
       if (!Array.isArray(history?.messages) || history.messages.length === 0) {
         return this.readFromDeletedTranscript(sessionKey);
       }
@@ -1301,7 +1301,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       const history = await client.request<{ messages?: unknown[] }>('chat.history', {
         sessionKey,
         limit: 1,
-      });
+      }, { timeoutMs: 3_000 });
       hasHistory = Array.isArray(history?.messages) && history.messages.length > 0;
     } catch (error) {
       console.warn('[OpenClawRuntime] chat.history check failed, continuing without history guard:', error);
@@ -3029,7 +3029,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       const history = await client.request<{ messages?: unknown[] }>('chat.history', {
         sessionKey,
         limit,
-      });
+      }, { timeoutMs: 10_000 });
       if (!Array.isArray(history?.messages) || history.messages.length === 0) {
         console.log('[Reconcile] empty history — sessionId:', sessionId);
         this.channelSyncCursor.set(sessionId, 0);
@@ -3156,7 +3156,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
         const history = await client.request<{ messages?: unknown[] }>('chat.history', {
           sessionKey: turn.sessionKey,
           limit: FINAL_HISTORY_SYNC_LIMIT,
-        });
+        }, { timeoutMs: 8_000 });
         const msgCount = Array.isArray(history?.messages) ? history.messages.length : 0;
         console.log('[Debug:syncFinal] chat.history returned', msgCount, 'messages', `afterDelay=${delayMs}`);
         if (!Array.isArray(history?.messages) || history.messages.length === 0) {
@@ -3837,7 +3837,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
         const history = await client.request<{ messages?: unknown[] }>('chat.history', {
           sessionKey,
           limit: FINAL_HISTORY_SYNC_LIMIT,
-        });
+        }, { timeoutMs: 5_000 });
         const msgCount = Array.isArray(history?.messages) ? history.messages.length : 0;
         console.log('[Debug:prefetch] chat.history returned', msgCount, 'messages (attempt', attempt, ')');
 

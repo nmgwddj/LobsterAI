@@ -991,6 +991,10 @@ export class OpenClawConfigSync {
           'minimax': { enabled: true },
           'volcengine': { enabled: true },
           'browser': { enabled: true },
+          // Disable acpx (ACP agent runtime) — LobsterAI does not use ACP and
+          // the embedded probe adds ~11s to gateway startup while it waits for
+          // a process that always fails.  See openclaw/openclaw#62588.
+          'acpx': { enabled: false },
         };
 
         return Object.keys(pluginEntries).length > 0
