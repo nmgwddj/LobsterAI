@@ -1,0 +1,38 @@
+src/main/libs/agentEngine/openclawRuntimeAdapter.ts
+  c4ce12fb3b579b0b 3098-3109
+src/main/libs/agentEngine/openclawRuntimeAdapter.test.ts
+  c4ce12fb3b579b0b 129-130,150-152,205-230
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "82776960eb7c3ed2f19ee246c4ab5292e7eaac82",
+  "prompts": {
+    "3876c1e739e725ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "262d60cc-804a-4aa1-83d7-5a8d52bfd579",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 111,
+      "total_deletions": 90,
+      "accepted_lines": 109,
+      "overriden_lines": 0
+    },
+    "c4ce12fb3b579b0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae5d138b-e528-4b4e-b71f-35702f2329c9",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 5,
+      "accepted_lines": 43,
+      "overriden_lines": 0
+    }
+  }
+}
