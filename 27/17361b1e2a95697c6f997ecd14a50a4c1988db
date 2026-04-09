@@ -1,0 +1,23 @@
+src/renderer/types/electron.d.ts
+  844e2639c7e50b59 62,75,639-649,661,663-665
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "2717361b1e2a95697c6f997ecd14a50a4c1988db",
+  "prompts": {
+    "844e2639c7e50b59": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7931e625-8b77-4310-b8ab-9251b7874118",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 0,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
