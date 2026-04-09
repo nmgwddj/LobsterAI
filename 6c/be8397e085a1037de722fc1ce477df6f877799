@@ -1,0 +1,36 @@
+src/main/main.ts
+  b275f885f12de843 927-931,963,965-966,983-987
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.4",
+  "base_commit_sha": "6cbe8397e085a1037de722fc1ce477df6f877799",
+  "prompts": {
+    "b275f885f12de843": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a9ecc81-ce39-4604-8291-bbf7647f15fb",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 42,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    },
+    "b6197bbac57bebb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5f3e1eee-56e0-4550-b25e-0b47c0719d73",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
