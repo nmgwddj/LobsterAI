@@ -1,0 +1,34 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "3c7f42736171d4de2bd461b06d5b3ec35dbea509",
+  "prompts": {
+    "e060810fc4121225": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d7223-f83b-7c13-8559-7bff269d8dcf",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "f73a2d677a80de71": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d7529-9baa-70e3-8920-c7980c374bae",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
