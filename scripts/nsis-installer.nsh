@@ -37,12 +37,23 @@
 
   ; ── Remove old installation directory ──
   ; After all processes are gone, ghost file handles may still linger for a
-  ; few seconds. RMDir /r will silently skip locked files but remove the rest
-  ; — including the old uninstaller exe. This prevents electron-builder from
-  ; invoking old-uninstaller.exe (which lacks our customUnInit and would show
-  ; an "app cannot be closed" dialog the user can never dismiss).
-  ; The new installer will lay down a complete fresh copy of all files.
-  RMDir /r "$INSTDIR"
+  ; few seconds. We must remove the old install directory — including the old
+  ; uninstaller exe — to prevent electron-builder from invoking it (which
+  ; lacks our customUnInit and would show an undismissable dialog).
+  ;
+  ; Strategy: rename $INSTDIR to a temp name (instant, even for thousands of
+  ; files), then delete the renamed directory asynchronously via cmd /c so
+  ; the installer UI appears immediately instead of blocking on recursive
+  ; deletion of cfmind/SKILLs/node_modules (3000+ files).
+  ; If rename fails (ghost file handles), skip — the installer's built-in
+  ; uninstall step will handle the old directory.
+  IfFileExists "$INSTDIR\*.*" 0 SkipOldDirRemoval
+    Rename "$INSTDIR" "$INSTDIR.old"
+    IfErrors 0 RenameOK
+      Goto SkipOldDirRemoval
+    RenameOK:
+      nsExec::Exec 'cmd /c rd /s /q "$INSTDIR.old"'
+  SkipOldDirRemoval:
 !macroend
 
 !macro customInstall
