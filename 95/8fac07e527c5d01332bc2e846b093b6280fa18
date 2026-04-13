@@ -1,0 +1,25 @@
+src/shared/providers/constants.ts
+  b6197bbac57bebb4 215
+src/shared/providers/codingPlan.test.ts
+  b6197bbac57bebb4 60-61,63-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.4",
+  "base_commit_sha": "958fac07e527c5d01332bc2e846b093b6280fa18",
+  "prompts": {
+    "b6197bbac57bebb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5f3e1eee-56e0-4550-b25e-0b47c0719d73",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 4,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}

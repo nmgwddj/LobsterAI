@@ -1,0 +1,103 @@
+package.json
+  47b870de02faa82a 25
+src/main/libs/openclawConfigSync.ts
+  47b870de02faa82a 917
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "659daf87879d70f7dee191fcaf4f1e806aa2a207",
+  "prompts": {
+    "0334b872f0bf5f7e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9bb1e6db-73f2-4aa5-b7d2-f6be60d7e337",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 5,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "1da98c2bd0b2201a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bec531f6-491c-48e2-ad5b-ccb435a05fca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "307b8e8eb2c6e21f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "be7b8dd8-2561-4d88-99e2-91c429ac2c47",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 7,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "47b870de02faa82a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98bac315-ed02-46f8-b444-f53f146562a6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 29,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "52ebc134a506ff69": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bae1892a-c2c3-48a4-bdcc-633962f7af8c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 5,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "dc2569e19c23d4e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7c97fea1-9006-41ac-83a8-7cffeee6e01d",
+        "model": "unknown"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 5,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    },
+    "ec56b3c09ec4f05d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "410ebd09-1074-4332-b32d-bd0e824d7ac8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 261,
+      "total_deletions": 15,
+      "accepted_lines": 21,
+      "overriden_lines": 0
+    }
+  }
+}
