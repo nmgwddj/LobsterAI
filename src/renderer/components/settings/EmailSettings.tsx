@@ -3,11 +3,12 @@ import type {
   EmailMultiInstanceConfig,
   EmailInstanceConfig,
   EmailMultiInstanceStatus,
-  EmailInstanceStatus,
 } from '../../../main/im/types';
 import { DEFAULT_EMAIL_INSTANCE_CONFIG, MAX_EMAIL_INSTANCES } from '../../../main/im/types';
 import { isValidEmail } from '../../utils/validation';
-import { t } from '../../services/i18n';
+import { i18nService } from '../../services/i18n';
+
+const t = (key: string) => i18nService.t(key);
 
 interface EmailSettingsProps {}
 
@@ -24,7 +25,6 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
 
   // Derived state
   const selectedInstance = emailConfig.instances.find(i => i.instanceId === selectedInstanceId);
-  const selectedStatus = emailStatus.instances.find(s => s.instanceId === selectedInstanceId);
 
   // Load configuration on mount
   useEffect(() => {
@@ -215,15 +215,14 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
       return;
     }
 
-    const apiKeyUrl = `https://your-clawemail-service.com/get-apikey?email=${encodeURIComponent(email)}`;
+    const apiKeyUrl = `https://claw.163.com/projects/dashboard/#/api-keys`;
 
     try {
       await window.electron.shell.openExternal(apiKeyUrl);
       alert(t('emailVerifyInBrowserAndPaste'));
     } catch (error) {
       alert('Failed to open browser. Please visit: ' + apiKeyUrl);
-    }
-  };
+    }  };
 
   const handleTestConnection = async () => {
     if (!selectedInstance) return;
@@ -232,9 +231,7 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
       setTesting(selectedInstance.instanceId);
 
       // TODO: Implement email:testConnection IPC handler in main process
-      const result = await window.electron.im.testGateway('email', {
-        instanceId: selectedInstance.instanceId,
-      });
+      const result = await window.electron.im.testGateway('email');
 
       if (result.success) {
         alert(t('emailTestSuccess'));
@@ -258,6 +255,7 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
       {/* Left: Instance list */}
       <div className="w-64 border-r border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
         <button
+          type="button"
           onClick={handleAddInstance}
           disabled={emailConfig.instances.length >= MAX_EMAIL_INSTANCES}
           className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
@@ -283,6 +281,7 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-medium truncate">{inst.instanceName}</span>
                   <button
+                    type="button"
                     onClick={e => {
                       e.stopPropagation();
                       handleDeleteInstance(inst.instanceId);
@@ -404,6 +403,7 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800"
                   />
                   <button
+                    type="button"
                     onClick={handleGetApiKey}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 whitespace-nowrap"
                   >
@@ -635,6 +635,7 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
           {/* Actions */}
           <div className="flex gap-2 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
+              type="button"
               onClick={handleTestConnection}
               disabled={!selectedInstance.email || testing === selectedInstance.instanceId}
               className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -642,6 +643,7 @@ export const EmailSettings: React.FC<EmailSettingsProps> = () => {
               {testing === selectedInstance.instanceId ? 'Testing...' : t('testConnection')}
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={saving}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"

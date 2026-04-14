@@ -131,7 +131,7 @@ const DEFINITIONS = [
   {
     id: 'email',
     label: 'Email',
-    region: 'global',
+    region: 'china',
     channel: 'email',
     channelAliases: ['clawemail', 'clawemail-email'],
     logo: 'email.svg',

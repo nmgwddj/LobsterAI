@@ -56,7 +56,7 @@
       {
         "id": "clawemail-email",
         "npm": "@clawemail/email",
-        "version": "0.9.6"
+        "version": "0.9.11"
       }
     ]
   },
