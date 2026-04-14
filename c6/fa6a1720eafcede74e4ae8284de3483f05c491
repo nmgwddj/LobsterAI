@@ -1,0 +1,108 @@
+src/main/libs/agentEngine/openclawRuntimeAdapter.ts
+  f724abce1e4d9dfc 1,8-21,26-30,46,52-62,566-567,662-693,1922-1923,3249,3509-3517,3632-3641,3909,4038-4048
+src/main/libs/openclawSessionFacade.ts
+  f724abce1e4d9dfc 1-179
+src/main/main.ts
+  f724abce1e4d9dfc 8,25,2449-2474,3351-3352,3385-3389,3399,3487
+src/renderer/components/openclawSessions/OpenClawSessionDetail.tsx
+  f724abce1e4d9dfc 1-1573
+src/renderer/services/i18n.ts
+  f724abce1e4d9dfc 20,315-337,1342,1637-1659
+src/main/ipcHandlers/openclawSession/constants.ts
+  f724abce1e4d9dfc 1-12
+src/renderer/components/cowork/CoworkPromptInput.tsx
+  f724abce1e4d9dfc 14,32,115-118,138-141,149-151,266-267,270,338-340,345-352,436-444,709,879-888,890
+src/main/ipcHandlers/openclawSession/streamBridge.ts
+  f724abce1e4d9dfc 1-158
+src/renderer/types/cowork.ts
+  f724abce1e4d9dfc 1-3,89,103
+src/common/coworkSessionViewMode.ts
+  f724abce1e4d9dfc 1-7
+src/main/preload.ts
+  f724abce1e4d9dfc 6,148,161-188,266
+src/renderer/components/cowork/CoworkView.tsx
+  f724abce1e4d9dfc 2-3,5,9,12,19-30,33-38,42-43,83-101,467-473,508-536,559-563,608-635,676-807,809-810
+src/renderer/components/openclawSessions/OpenClawSessionItem.tsx
+  f724abce1e4d9dfc 1-413
+src/renderer/components/openclawSessions/OpenClawSessionSidebar.tsx
+  f724abce1e4d9dfc 1-194
+src/renderer/components/Settings.tsx
+  f724abce1e4d9dfc 5-6,29,715-717,739,746,1369,1719,2764-2769,2771-2779
+src/renderer/components/Sidebar.tsx
+  f724abce1e4d9dfc 1-2,4-10,12,16-17,19-20,24,28-30,63,67-69,76,106-112,115-122,175-179,286,294-323,331-344
+src/renderer/components/openclawSessions/OpenClawSessionInput.tsx
+  f724abce1e4d9dfc 1-143
+src/renderer/store/slices/coworkSlice.ts
+  f724abce1e4d9dfc 57
+src/renderer/store/index.ts
+  f724abce1e4d9dfc 11,24
+src/renderer/store/slices/coworkSlice.test.ts
+  f724abce1e4d9dfc 25
+src/renderer/types/openclawSession.ts
+  f724abce1e4d9dfc 1-189
+src/renderer/services/agent.ts
+  f724abce1e4d9dfc 11,160
+src/renderer/types/electron.d.ts
+  f724abce1e4d9dfc 65,79,325,333-385
+src/main/ipcHandlers/openclawSession/handlers.ts
+  f724abce1e4d9dfc 1-123
+src/main/ipcHandlers/openclawSession/helpers.ts
+  f724abce1e4d9dfc 1-74
+src/renderer/components/openclawSessions/OpenClawSessionToolbar.tsx
+  f724abce1e4d9dfc 1-384
+src/renderer/components/openclawSessions/OpenClawSessionSearchModal.tsx
+  f724abce1e4d9dfc 1-281
+src/renderer/services/openclawSessionService.ts
+  f724abce1e4d9dfc 1-1544
+src/renderer/store/slices/openclawSessionSlice.ts
+  f724abce1e4d9dfc 1-177
+src/renderer/App.tsx
+  f724abce1e4d9dfc 1-5,7,11-22,24,26-29,31-38,67,177-187,309-313,321
+src/main/coworkStore.ts
+  f724abce1e4d9dfc 10-12,463,477,1056,1083-1085,1205-1219
+src/renderer/components/openclawSessions/constants.ts
+  f724abce1e4d9dfc 1-63
+src/main/ipcHandlers/openclawSession/index.ts
+  f724abce1e4d9dfc 1-3
+src/renderer/components/openclawSessions/OpenClawSessionView.tsx
+  f724abce1e4d9dfc 1-103
+src/renderer/components/openclawSessions/OpenClawLazyRenderTurn.tsx
+  f724abce1e4d9dfc 1-81
+src/renderer/store/selectors/openclawSessionSelectors.ts
+  f724abce1e4d9dfc 1-55
+spec/features/openclaw-sessions/2026-04-14-openclaw-session-view-design.md
+  f724abce1e4d9dfc 1-575
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "c6fa6a1720eafcede74e4ae8284de3483f05c491",
+  "prompts": {
+    "af629e8b56974303": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8560-fb8b-7dc2-8dfe-45bba98b0227",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 336,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "f724abce1e4d9dfc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d86e9-f7c0-7702-bab8-a957d5084dc8",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 11396,
+      "total_deletions": 445,
+      "accepted_lines": 11393,
+      "overriden_lines": 0
+    }
+  }
+}
