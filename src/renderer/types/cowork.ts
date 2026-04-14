@@ -62,6 +62,7 @@ export interface CoworkSession {
   pinned: boolean;
   cwd: string;
   systemPrompt: string;
+  modelOverride: string;
   executionMode: CoworkExecutionMode;
   activeSkillIds: string[];
   agentId: string;

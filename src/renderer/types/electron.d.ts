@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { OpenClawSessionPatch } from '../../common/openclawSession';
 interface ApiResponse {
   ok: boolean;
   status: number;
@@ -24,6 +25,7 @@ interface CoworkSession {
   pinned: boolean;
   cwd: string;
   systemPrompt: string;
+  modelOverride: string;
   executionMode: 'auto' | 'local' | 'sandbox';
   activeSkillIds: string[];
   agentId: string;
@@ -325,6 +327,12 @@ interface IElectronAPI {
     sessionPolicy: {
       get: () => Promise<{ success: boolean; config?: OpenClawSessionPolicyConfig; error?: string }>;
       set: (config: OpenClawSessionPolicyConfig) => Promise<{ success: boolean; config?: OpenClawSessionPolicyConfig; error?: string }>;
+    };
+    session: {
+      patch: (options: {
+        sessionId: string;
+        patch: OpenClawSessionPatch;
+      }) => Promise<{ success: boolean; session?: CoworkSession; error?: string }>;
     };
   };
   ipcRenderer: {

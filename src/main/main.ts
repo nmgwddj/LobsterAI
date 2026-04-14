@@ -5,6 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import type { OpenClawSessionPatch } from '../common/openclawSession';
 import { buildScheduledTaskEnginePrompt } from '../scheduledTask/enginePrompt';
 import { migrateScheduledTaskRunsToOpenclaw, migrateScheduledTasksToOpenclaw } from '../scheduledTask/migrate';
 import { PlatformRegistry } from '../shared/platform';
@@ -84,6 +85,7 @@ import {
 import { getLogFilePath, getRecentMainLogEntries, initLogger } from './logger';
 import type { McpServerFormData } from './mcpStore';
 import { McpStore } from './mcpStore';
+import { OpenClawSessionIpc } from './openclawSession/constants';
 import { OpenClawSessionPolicyIpc } from './openclawSessionPolicy/constants';
 import { loadOpenClawSessionPolicyConfig, saveOpenClawSessionPolicyConfig } from './openclawSessionPolicy/store';
 import { SkillManager } from './skillManager';
@@ -119,6 +121,55 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
   'application/json': '.json',
   'text/csv': '.csv',
 };
+
+function sanitizeOptionalPatchValue(
+  value: unknown,
+  maxChars = IPC_STRING_MAX_CHARS,
+): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== 'string') {
+    throw new Error('Session patch value must be a string or null.');
+  }
+  const trimmed = value.trim();
+  if (trimmed.length > maxChars) {
+    throw new Error('Session patch value is too long.');
+  }
+  return trimmed;
+}
+
+function sanitizeOpenClawSessionPatch(input: unknown): OpenClawSessionPatch {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('Invalid session patch payload.');
+  }
+
+  const source = input as Record<string, unknown>;
+  const patch: OpenClawSessionPatch = {};
+
+  const model = sanitizeOptionalPatchValue(source.model);
+  if (model !== undefined) patch.model = model;
+
+  const thinkingLevel = sanitizeOptionalPatchValue(source.thinkingLevel);
+  if (thinkingLevel !== undefined) patch.thinkingLevel = thinkingLevel;
+
+  const reasoningLevel = sanitizeOptionalPatchValue(source.reasoningLevel);
+  if (reasoningLevel !== undefined) patch.reasoningLevel = reasoningLevel;
+
+  const elevatedLevel = sanitizeOptionalPatchValue(source.elevatedLevel);
+  if (elevatedLevel !== undefined) patch.elevatedLevel = elevatedLevel;
+
+  const responseUsage = sanitizeOptionalPatchValue(source.responseUsage);
+  if (responseUsage !== undefined) patch.responseUsage = responseUsage as OpenClawSessionPatch['responseUsage'];
+
+  const sendPolicy = sanitizeOptionalPatchValue(source.sendPolicy);
+  if (sendPolicy !== undefined) patch.sendPolicy = sendPolicy as OpenClawSessionPatch['sendPolicy'];
+
+  if (Object.keys(patch).length === 0) {
+    throw new Error('Session patch is empty.');
+  }
+
+  return patch;
+}
 
 const sanitizeExportFileName = (value: string): string => {
   const sanitized = value.replace(INVALID_FILE_NAME_PATTERN, ' ').replace(/\s+/g, ' ').trim();
@@ -3160,6 +3211,45 @@ if (!gotTheLock) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to save OpenClaw session policy',
+      };
+    }
+  });
+
+  ipcMain.handle(OpenClawSessionIpc.Patch, async (_event, input: unknown) => {
+    try {
+      if (!input || typeof input !== 'object' || Array.isArray(input)) {
+        throw new Error('Invalid OpenClaw session patch input.');
+      }
+
+      const request = input as { sessionId?: unknown; patch?: unknown };
+      const sessionId = typeof request.sessionId === 'string' ? request.sessionId.trim() : '';
+      if (!sessionId) {
+        throw new Error('Session ID is required.');
+      }
+
+      const patch = sanitizeOpenClawSessionPatch(request.patch);
+      const runtime = getCoworkEngineRouter();
+      await runtime.patchSession(sessionId, patch);
+
+      if (patch.model !== undefined) {
+        getCoworkStore().updateSession(sessionId, {
+          modelOverride: patch.model ?? '',
+        });
+      }
+
+      const session = getCoworkStore().getSession(sessionId);
+      if (!session) {
+        throw new Error(`Session ${sessionId} not found`);
+      }
+
+      return {
+        success: true,
+        session,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to patch OpenClaw session',
       };
     }
   });

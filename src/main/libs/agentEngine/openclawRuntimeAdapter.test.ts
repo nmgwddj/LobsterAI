@@ -1,4 +1,4 @@
-import { test, expect, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 vi.mock('electron', () => ({
   app: {
@@ -23,6 +23,7 @@ function createReconcileStore(messages: Array<Record<string, unknown>>) {
     pinned: false,
     cwd: '',
     systemPrompt: '',
+    modelOverride: '',
     executionMode: 'local',
     activeSkillIds: [],
     messages: [...messages],

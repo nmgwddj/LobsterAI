@@ -3,6 +3,7 @@ import type { CoworkAgentEngine } from '../../types/cowork';
 import { resolveOpenClawModelRef } from '../../utils/openclawModelRef';
 
 type ResolveAgentModelSelectionInput = {
+  sessionModel?: string;
   agentModel: string;
   availableModels: Model[];
   fallbackModel: Model | null;
@@ -16,6 +17,7 @@ type ResolveAgentModelSelectionResult = {
 };
 
 export function resolveAgentModelSelection({
+  sessionModel,
   agentModel,
   availableModels,
   fallbackModel,
@@ -23,6 +25,16 @@ export function resolveAgentModelSelection({
 }: ResolveAgentModelSelectionInput): ResolveAgentModelSelectionResult {
   if (engine !== 'openclaw') {
     return { selectedModel: fallbackModel, usesFallback: false, hasInvalidExplicitModel: false };
+  }
+
+  const normalizedSessionModel = sessionModel?.trim() ?? '';
+  if (normalizedSessionModel) {
+    const explicitSessionModel = resolveOpenClawModelRef(normalizedSessionModel, availableModels) ?? null;
+    if (explicitSessionModel) {
+      return { selectedModel: explicitSessionModel, usesFallback: false, hasInvalidExplicitModel: false };
+    }
+
+    return { selectedModel: fallbackModel, usesFallback: true, hasInvalidExplicitModel: true };
   }
 
   const normalizedAgentModel = agentModel.trim();

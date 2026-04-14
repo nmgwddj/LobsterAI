@@ -1,4 +1,5 @@
 import { classifyErrorKey } from '../../common/coworkErrorClassify';
+import type { OpenClawSessionPatch } from '../../common/openclawSession';
 import { store } from '../store';
 import {
   addMessage,
@@ -491,6 +492,24 @@ class CoworkService {
     }
 
     console.error('Failed to load session:', result.error);
+    return null;
+  }
+
+  async patchSession(sessionId: string, patch: OpenClawSessionPatch): Promise<CoworkSession | null> {
+    const sessionApi = window.electron?.openclaw?.session;
+    if (!sessionApi?.patch) {
+      console.error('OpenClaw session patch API not available');
+      return null;
+    }
+
+    const result = await sessionApi.patch({ sessionId, patch });
+    if (result.success && result.session) {
+      store.dispatch(setCurrentSession(result.session));
+      store.dispatch(setStreaming(result.session.status === 'running'));
+      return result.session;
+    }
+
+    console.error('Failed to patch session:', result.error);
     return null;
   }
 

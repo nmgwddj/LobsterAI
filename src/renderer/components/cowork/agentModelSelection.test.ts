@@ -24,6 +24,20 @@ describe('resolveAgentModelSelection', () => {
     expect(result.hasInvalidExplicitModel).toBe(false);
   });
 
+  test('prefers explicit session model override over agent model', () => {
+    const result = resolveAgentModelSelection({
+      sessionModel: 'openai/gpt-4o',
+      agentModel: 'anthropic/claude-sonnet-4',
+      availableModels: models,
+      fallbackModel: models[0],
+      engine: 'openclaw',
+    });
+
+    expect(result.selectedModel?.id).toBe('gpt-4o');
+    expect(result.usesFallback).toBe(false);
+    expect(result.hasInvalidExplicitModel).toBe(false);
+  });
+
   test('falls back to the global model in openclaw when agent model is empty', () => {
     const result = resolveAgentModelSelection({
       agentModel: '',

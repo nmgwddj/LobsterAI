@@ -1,5 +1,7 @@
-import { EventEmitter } from 'events';
 import type { PermissionResult } from '@anthropic-ai/claude-agent-sdk';
+import { EventEmitter } from 'events';
+
+import type { OpenClawSessionPatch } from '../../../common/openclawSession';
 import type { CoworkRunner } from '../coworkRunner';
 import type {
   CoworkContinueOptions,
@@ -37,6 +39,10 @@ export class ClaudeRuntimeAdapter extends EventEmitter implements CoworkRuntime 
 
   async continueSession(sessionId: string, prompt: string, options: CoworkContinueOptions = {}): Promise<void> {
     await this.runner.continueSession(sessionId, prompt, options);
+  }
+
+  async patchSession(_sessionId: string, _patch: OpenClawSessionPatch): Promise<void> {
+    throw new Error('Session patch is only supported by the OpenClaw engine.');
   }
 
   stopSession(sessionId: string): void {
