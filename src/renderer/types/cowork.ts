@@ -1,3 +1,6 @@
+import { type CoworkSessionViewMode as CoworkSessionViewModeValue } from '../../common/coworkSessionViewMode';
+export { CoworkSessionViewMode } from '../../common/coworkSessionViewMode';
+
 // Cowork image attachment for vision-capable models
 export interface CoworkImageAttachment {
   name: string;
@@ -83,6 +86,7 @@ export interface CoworkConfig {
   memoryUserMemoriesMaxItems: number;
   skipMissedJobs: boolean;
   openClawSessionPolicy: OpenClawSessionPolicyConfig;
+  sessionViewMode: CoworkSessionViewModeValue;
 }
 
 export type CoworkConfigUpdate = Partial<Pick<
@@ -96,6 +100,7 @@ export type CoworkConfigUpdate = Partial<Pick<
   | 'memoryGuardLevel'
   | 'memoryUserMemoriesMaxItems'
   | 'skipMissedJobs'
+  | 'sessionViewMode'
 >>;
 
 export interface CoworkApiConfig {

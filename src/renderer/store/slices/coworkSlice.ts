@@ -54,6 +54,7 @@ const initialState: CoworkState = {
     memoryGuardLevel: 'strict',
     memoryUserMemoriesMaxItems: 12,
     skipMissedJobs: false,
+    sessionViewMode: 'legacy',
     openClawSessionPolicy: {
       keepAlive: '30d',
     },

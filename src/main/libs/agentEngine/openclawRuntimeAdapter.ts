@@ -1,15 +1,33 @@
+import type { PermissionResult } from '@anthropic-ai/claude-agent-sdk';
 import { randomUUID } from 'crypto';
 import { app, BrowserWindow } from 'electron';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pathToFileURL } from 'url';
-import type { PermissionResult } from '@anthropic-ai/claude-agent-sdk';
-import type { CoworkMessage, CoworkSession, CoworkSessionStatus, CoworkExecutionMode, CoworkStore } from '../../coworkStore';
+
+import type { CoworkExecutionMode, CoworkMessage, CoworkSession, CoworkSessionStatus, CoworkStore } from '../../coworkStore';
+import { t } from '../../i18n';
+import { getCommandDangerLevel,isDeleteCommand } from '../commandSafety';
+import { setCoworkProxySessionId } from '../coworkOpenAICompatProxy';
+import { extractOpenClawAssistantStreamText } from '../openclawAssistantText';
+import {
+  buildManagedSessionKey,
+  isManagedSessionKey,
+  type OpenClawChannelSessionSync,
+  parseChannelSessionKey,
+  parseManagedSessionKey,
+} from '../openclawChannelSessionSync';
+import { OPENCLAW_AGENT_TIMEOUT_SECONDS } from '../openclawConfigSync';
 import {
   OpenClawEngineManager,
   type OpenClawGatewayConnectionInfo,
 } from '../openclawEngineManager';
+import {
+  extractGatewayHistoryEntries,
+  extractGatewayMessageText,
+} from '../openclawHistory';
+import { buildOpenClawLocalTimeContextPrompt } from '../openclawLocalTimeContextPrompt';
 import type {
   CoworkContinueOptions,
   CoworkRuntime,
@@ -17,23 +35,6 @@ import type {
   CoworkStartOptions,
   PermissionRequest,
 } from './types';
-import {
-  buildManagedSessionKey,
-  type OpenClawChannelSessionSync,
-  isManagedSessionKey,
-  parseManagedSessionKey,
-  parseChannelSessionKey,
-} from '../openclawChannelSessionSync';
-import {
-  extractGatewayHistoryEntries,
-  extractGatewayMessageText,
-} from '../openclawHistory';
-import { extractOpenClawAssistantStreamText } from '../openclawAssistantText';
-import { buildOpenClawLocalTimeContextPrompt } from '../openclawLocalTimeContextPrompt';
-import { isDeleteCommand, getCommandDangerLevel } from '../commandSafety';
-import { setCoworkProxySessionId } from '../coworkOpenAICompatProxy';
-import { OPENCLAW_AGENT_TIMEOUT_SECONDS } from '../openclawConfigSync';
-import { t } from '../../i18n';
 
 const OPENCLAW_GATEWAY_TOOL_EVENTS_CAP = 'tool-events';
 const BRIDGE_MAX_MESSAGES = 20;
@@ -42,11 +43,23 @@ const GATEWAY_READY_TIMEOUT_MS = 15_000;
 const FINAL_HISTORY_SYNC_LIMIT = 50;
 const CHANNEL_SESSION_DISCOVERY_LIMIT = 200;
 
-type GatewayEventFrame = {
+export type GatewayEventFrame = {
   event: string;
   seq?: number;
   payload?: unknown;
 };
+
+export type OpenClawSessionProjectionEvent =
+  | {
+    kind: 'userMessage';
+    sessionKey: string;
+    message: {
+      role: 'user';
+      content: string;
+    };
+    source: 'historySync';
+    receivedAt: number;
+  };
 
 type GatewayClientLike = {
   start: () => void;
@@ -550,6 +563,8 @@ const waitWithTimeout = async (promise: Promise<void>, timeoutMs: number): Promi
 export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntime {
   private readonly store: CoworkStore;
   private readonly engineManager: OpenClawEngineManager;
+  private readonly gatewayEventListeners = new Set<(event: GatewayEventFrame) => void>();
+  private readonly sessionProjectionEventListeners = new Set<(event: OpenClawSessionProjectionEvent) => void>();
   private readonly activeTurns = new Map<string, ActiveTurn>();
   private readonly sessionIdBySessionKey = new Map<string, string>();
   private readonly sessionIdByRunId = new Map<string, string>();
@@ -642,6 +657,40 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
 
   setChannelSessionSync(sync: OpenClawChannelSessionSync): void {
     this.channelSessionSync = sync;
+  }
+
+  onGatewayEvent(listener: (event: GatewayEventFrame) => void): () => void {
+    this.gatewayEventListeners.add(listener);
+    return () => {
+      this.gatewayEventListeners.delete(listener);
+    };
+  }
+
+  onSessionProjectionEvent(listener: (event: OpenClawSessionProjectionEvent) => void): () => void {
+    this.sessionProjectionEventListeners.add(listener);
+    return () => {
+      this.sessionProjectionEventListeners.delete(listener);
+    };
+  }
+
+  private notifyGatewayEventListeners(event: GatewayEventFrame): void {
+    for (const listener of this.gatewayEventListeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.warn('[OpenClawRuntime] gateway event listener failed:', error);
+      }
+    }
+  }
+
+  private notifySessionProjectionEventListeners(event: OpenClawSessionProjectionEvent): void {
+    for (const listener of this.sessionProjectionEventListeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.warn('[OpenClawRuntime] session projection event listener failed:', error);
+      }
+    }
   }
 
   /**
@@ -1870,6 +1919,8 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
   }
 
   private handleGatewayEvent(event: GatewayEventFrame): void {
+    this.notifyGatewayEventListeners(event);
+
     if (event.event === 'tick') {
       this.lastTickTimestamp = Date.now();
       return;
@@ -3195,7 +3246,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
         );
         if (isChannel) {
           const latestOnly = this.reCreatedChannelSessionIds.has(sessionId);
-          this.syncChannelUserMessages(sessionId, history.messages, latestOnly, turn.sessionKey.includes(':discord:'), turn.sessionKey.includes(':qqbot:'), turn.sessionKey.includes(':moltbot-popo:'));
+          this.syncChannelUserMessages(sessionId, turn.sessionKey, history.messages, latestOnly, turn.sessionKey.includes(':discord:'), turn.sessionKey.includes(':qqbot:'), turn.sessionKey.includes(':moltbot-popo:'));
         }
 
         if (!this.isCurrentTurnToken(sessionId, turn.turnToken)) {
@@ -3455,7 +3506,15 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
    * because OpenClaw's `chat.history` window can slide due to byte limits well before
    * the requested message count is reached.
    */
-  private syncChannelUserMessages(sessionId: string, historyMessages: unknown[], latestOnly = false, isDiscord = false, isQQ = false, isPopo = false): void {
+  private syncChannelUserMessages(
+    sessionId: string,
+    sessionKey: string,
+    historyMessages: unknown[],
+    latestOnly = false,
+    isDiscord = false,
+    isQQ = false,
+    isPopo = false,
+  ): void {
     const historyEntries = this.collectChannelHistoryEntries(historyMessages, isDiscord, isQQ, isPopo);
 
     const cursor = this.channelSyncCursor.get(sessionId) ?? 0;
@@ -3570,6 +3629,16 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
         });
       }
       this.emit('message', sessionId, userMessage);
+      this.notifySessionProjectionEventListeners({
+        kind: 'userMessage',
+        sessionKey,
+        message: {
+          role: 'user',
+          content: entry.text,
+        },
+        source: 'historySync',
+        receivedAt: Date.now(),
+      });
       localUserTexts.add(entry.text);
       syncedCount++;
     }
@@ -3837,7 +3906,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
           this.markGatewayHistoryWindowConsumed(sessionId, history.messages);
           const latestOnly = this.reCreatedChannelSessionIds.has(sessionId);
           const beforeCount = this.getUserMessageCount(sessionId);
-                  this.syncChannelUserMessages(sessionId, history.messages, latestOnly, sessionKey.includes(':discord:'), sessionKey.includes(':qqbot:'), sessionKey.includes(':moltbot-popo:'));
+                  this.syncChannelUserMessages(sessionId, sessionKey, history.messages, latestOnly, sessionKey.includes(':discord:'), sessionKey.includes(':qqbot:'), sessionKey.includes(':moltbot-popo:'));
           const afterCount = this.getUserMessageCount(sessionId);
           const newUserMessages = afterCount - beforeCount;
           console.log('[Debug:prefetch] synced user messages:', newUserMessages, '(before:', beforeCount, 'after:', afterCount, ')');
@@ -3964,6 +4033,19 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
    */
   getGatewayClient(): GatewayClientLike | null {
     return this.gatewayClient;
+  }
+
+  getSessionBindingState(sessionKey: string): 'current' | 'stale' | 'unknown' {
+    const normalizedSessionKey = sessionKey.trim();
+    if (!normalizedSessionKey || !this.channelSessionSync) {
+      return 'unknown';
+    }
+    if (!this.channelSessionSync.isChannelSessionKey(normalizedSessionKey)) {
+      return 'unknown';
+    }
+    return this.channelSessionSync.isCurrentBindingKey(normalizedSessionKey)
+      ? 'current'
+      : 'stale';
   }
 
   getSessionKeysForSession(sessionId: string): string[] {

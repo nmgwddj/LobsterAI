@@ -1,41 +1,44 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import React, { useCallback, useEffect, useMemo,useRef, useState } from 'react';
+import { useDispatch,useSelector } from 'react-redux';
+
+import { CoworkSessionViewMode } from '../common/coworkSessionViewMode';
+import AgentsView from './components/agent/AgentsView';
+import { CoworkView } from './components/cowork';
+import CoworkPermissionModal from './components/cowork/CoworkPermissionModal';
+import CoworkQuestionWizard from './components/cowork/CoworkQuestionWizard';
+import EngineStartupOverlay from './components/cowork/EngineStartupOverlay';
+import { McpView } from './components/mcp';
+import PrivacyDialog from './components/PrivacyDialog';
+import { ScheduledTasksView } from './components/scheduledTasks';
+import Settings, { type SettingsOpenOptions } from './components/Settings';
+import Sidebar from './components/Sidebar';
+import { SkillsView } from './components/skills';
+import Toast from './components/Toast';
+import AppUpdateBadge from './components/update/AppUpdateBadge';
+import AppUpdateModal from './components/update/AppUpdateModal';
+import WindowTitleBar from './components/window/WindowTitleBar';
+import { defaultConfig, getProviderDisplayName } from './config';
+import type { ApiConfig } from './services/api';
+import { apiService } from './services/api';
+import { type AppUpdateDownloadProgress, type AppUpdateInfo, checkForAppUpdate, UPDATE_HEARTBEAT_INTERVAL_MS,UPDATE_POLL_INTERVAL_MS } from './services/appUpdate';
+import { authService } from './services/auth';
+import { configService } from './services/config';
+import { coworkService } from './services/cowork';
+import { i18nService } from './services/i18n';
+import { openclawSessionService } from './services/openclawSessionService';
+import { scheduledTaskService } from './services/scheduledTask';
+import { matchesShortcut } from './services/shortcuts';
+import { themeService } from './services/theme';
 import { RootState, store } from './store';
 import {
   selectCurrentSessionId,
   selectFirstPendingPermission,
 } from './store/selectors/coworkSelectors';
-import Settings, { type SettingsOpenOptions } from './components/Settings';
-import Sidebar from './components/Sidebar';
-import Toast from './components/Toast';
-import WindowTitleBar from './components/window/WindowTitleBar';
-import { CoworkView } from './components/cowork';
-import { SkillsView } from './components/skills';
-import { ScheduledTasksView } from './components/scheduledTasks';
-import { McpView } from './components/mcp';
-import AgentsView from './components/agent/AgentsView';
-import CoworkPermissionModal from './components/cowork/CoworkPermissionModal';
-import CoworkQuestionWizard from './components/cowork/CoworkQuestionWizard';
-import EngineStartupOverlay from './components/cowork/EngineStartupOverlay';
-import { configService } from './services/config';
-import { apiService } from './services/api';
-import { themeService } from './services/theme';
-import { coworkService } from './services/cowork';
-import { authService } from './services/auth';
-import { scheduledTaskService } from './services/scheduledTask';
-import { checkForAppUpdate, type AppUpdateInfo, type AppUpdateDownloadProgress, UPDATE_POLL_INTERVAL_MS, UPDATE_HEARTBEAT_INTERVAL_MS } from './services/appUpdate';
-import { defaultConfig, getProviderDisplayName } from './config';
+import { setDraftPrompt } from './store/slices/coworkSlice';
 import { setAvailableModels, setSelectedModel } from './store/slices/modelSlice';
 import { clearSelection } from './store/slices/quickActionSlice';
-import { setDraftPrompt } from './store/slices/coworkSlice';
-import type { ApiConfig } from './services/api';
 import type { CoworkPermissionResult } from './types/cowork';
-import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
-import { i18nService } from './services/i18n';
-import { matchesShortcut } from './services/shortcuts';
-import AppUpdateBadge from './components/update/AppUpdateBadge';
-import AppUpdateModal from './components/update/AppUpdateModal';
-import PrivacyDialog from './components/PrivacyDialog';
 
 const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
@@ -61,6 +64,7 @@ const App: React.FC = () => {
   const dispatch = useDispatch();
   const selectedModel = useSelector((state: RootState) => state.model.selectedModel);
   const currentSessionId = useSelector(selectCurrentSessionId);
+  const sessionViewMode = useSelector((state: RootState) => state.cowork.config.sessionViewMode);
   const pendingPermission = useSelector(selectFirstPendingPermission);
   const isWindows = window.electron.platform === 'win32';
 
@@ -169,6 +173,18 @@ const App: React.FC = () => {
 
         setIsInitialized(true);
         console.info('[App] initializeApp: shell ready');
+
+        void window.electron.openclaw.engine.debugListSessions()
+          .then((result) => {
+            if (result.success) {
+              console.log('[App] openclaw sessions.list result:', result.result);
+              return;
+            }
+            console.warn('[App] openclaw sessions.list debug call failed:', result.error);
+          })
+          .catch((error) => {
+            console.warn('[App] openclaw sessions.list debug call crashed:', error);
+          });
 
 
         // 初始化定时任务服务，但不阻塞首屏
@@ -290,7 +306,11 @@ const App: React.FC = () => {
 
   const handleNewChat = useCallback(() => {
     const shouldClearInput = mainView === 'cowork' || !!currentSessionId;
-    coworkService.clearSession();
+    if (sessionViewMode === CoworkSessionViewMode.OpenClaw) {
+      openclawSessionService.startDraftSession();
+    } else {
+      coworkService.clearSession();
+    }
     dispatch(clearSelection());
     setMainView('cowork');
     window.setTimeout(() => {
@@ -298,7 +318,7 @@ const App: React.FC = () => {
         detail: { clear: shouldClearInput },
       }));
     }, 0);
-  }, [dispatch, mainView, currentSessionId]);
+  }, [dispatch, mainView, currentSessionId, sessionViewMode]);
 
   const handleCreateSkillByChat = useCallback(() => {
     dispatch(setDraftPrompt({ sessionId: '__home__', draft: i18nService.t('skillCreatorPrompt') }));

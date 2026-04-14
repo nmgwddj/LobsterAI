@@ -1,26 +1,33 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import Modal from './common/Modal';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import {
-  selectCoworkSessions,
-  selectCurrentSessionId,
-} from '../store/selectors/coworkSelectors';
-import { RootState } from '../store';
+
+import { CoworkSessionViewMode } from '../../common/coworkSessionViewMode';
 import { agentService } from '../services/agent';
 import { coworkService } from '../services/cowork';
 import { i18nService } from '../services/i18n';
-import CoworkSessionList from './cowork/CoworkSessionList';
+import { openclawSessionService } from '../services/openclawSessionService';
+import type { RootState } from '../store';
+import {
+  selectCoworkConfig,
+  selectCoworkSessions,
+  selectCurrentSessionId,
+} from '../store/selectors/coworkSelectors';
+import { selectVisibleOpenClawItems } from '../store/selectors/openclawSessionSelectors';
+import Modal from './common/Modal';
 import CoworkSearchModal from './cowork/CoworkSearchModal';
-import LoginButton from './LoginButton';
+import CoworkSessionList from './cowork/CoworkSessionList';
+import ClockIcon from './icons/ClockIcon';
 import ComposeIcon from './icons/ComposeIcon';
 import ConnectorIcon from './icons/ConnectorIcon';
-import SearchIcon from './icons/SearchIcon';
-import ClockIcon from './icons/ClockIcon';
 import PuzzleIcon from './icons/PuzzleIcon';
+import SearchIcon from './icons/SearchIcon';
 import SidebarToggleIcon from './icons/SidebarToggleIcon';
 import TrashIcon from './icons/TrashIcon';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import UserGroupIcon from './icons/UserGroupIcon';
+import LoginButton from './LoginButton';
+import OpenClawSessionSidebar from './openclawSessions/OpenClawSessionSidebar';
+import OpenClawSessionSearchModal from './openclawSessions/OpenClawSessionSearchModal';
 
 interface SidebarProps {
   onShowSettings: () => void;
@@ -53,15 +60,20 @@ const Sidebar: React.FC<SidebarProps> = ({
   hideLogin,
 }) => {
   const currentAgentId = useSelector((state: RootState) => state.agent.currentAgentId);
+  const coworkConfig = useSelector(selectCoworkConfig);
   const sessions = useSelector(selectCoworkSessions);
   const filteredSessions = sessions.filter((s) => !s.agentId || s.agentId === currentAgentId);
   const currentSessionId = useSelector(selectCurrentSessionId);
+  const openclawItems = useSelector(selectVisibleOpenClawItems);
+  const openclawCurrentSessionKey = useSelector((state: RootState) => state.openclawSession.currentSessionKey);
+  const openclawLoadingList = useSelector((state: RootState) => state.openclawSession.loadingList);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const isMac = window.electron.platform === 'darwin';
+  const isOpenClawSessionView = coworkConfig.sessionViewMode === CoworkSessionViewMode.OpenClaw;
 
   useEffect(() => {
     const handleSearch = () => {
@@ -89,6 +101,23 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleDeleteSession = async (sessionId: string) => {
     await coworkService.deleteSession(sessionId);
+  };
+
+  const handleSelectOpenClawSession = async (sessionKey: string) => {
+    onShowCowork();
+    await openclawSessionService.loadHistory(sessionKey);
+  };
+
+  const handleDeleteOpenClawSession = async (sessionKey: string) => {
+    await openclawSessionService.deleteSession(sessionKey);
+  };
+
+  const handleToggleOpenClawPin = async (sessionKey: string, pinned: boolean) => {
+    await openclawSessionService.patchSession({ sessionKey, pinned });
+  };
+
+  const handleRenameOpenClawSession = async (sessionKey: string, title: string) => {
+    await openclawSessionService.patchSession({ sessionKey, label: title });
   };
 
   const handleTogglePin = async (sessionId: string, pinned: boolean) => {
@@ -142,6 +171,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     await coworkService.deleteSessions(ids);
     handleExitBatchMode();
   }, [selectedIds, handleExitBatchMode]);
+
+  useEffect(() => {
+    if (activeView !== 'cowork' || !isOpenClawSessionView) return;
+    void openclawSessionService.loadList();
+  }, [activeView, isOpenClawSessionView]);
 
   return (
     <aside
@@ -249,7 +283,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-2.5 pb-4">
+      <div className="flex-1 overflow-y-auto px-2 pb-4">
         <SidebarAgentList
           onShowCowork={onShowCowork}
           onSessionsLoadingChange={setSessionsLoading}
@@ -257,31 +291,57 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-3 pb-2 text-sm font-medium text-secondary">
           {i18nService.t('coworkHistory')}
         </div>
-        <CoworkSessionList
+        {isOpenClawSessionView ? (
+          <OpenClawSessionSidebar
+            items={openclawItems}
+            currentSessionKey={openclawCurrentSessionKey}
+            loading={openclawLoadingList}
+            onSelect={handleSelectOpenClawSession}
+            onDelete={handleDeleteOpenClawSession}
+            onTogglePin={handleToggleOpenClawPin}
+            onRename={handleRenameOpenClawSession}
+          />
+        ) : (
+          <CoworkSessionList
+            sessions={filteredSessions}
+            isLoading={sessionsLoading}
+            currentSessionId={currentSessionId}
+            isBatchMode={isBatchMode}
+            selectedIds={selectedIds}
+            onSelectSession={handleSelectSession}
+            onDeleteSession={handleDeleteSession}
+            onTogglePin={handleTogglePin}
+            onRenameSession={handleRenameSession}
+            onToggleSelection={handleToggleSelection}
+            onEnterBatchMode={handleEnterBatchMode}
+          />
+        )}
+      </div>
+      {!isOpenClawSessionView && (
+        <CoworkSearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
           sessions={filteredSessions}
-          isLoading={sessionsLoading}
           currentSessionId={currentSessionId}
-          isBatchMode={isBatchMode}
-          selectedIds={selectedIds}
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
           onTogglePin={handleTogglePin}
           onRenameSession={handleRenameSession}
-          onToggleSelection={handleToggleSelection}
-          onEnterBatchMode={handleEnterBatchMode}
         />
-      </div>
-      <CoworkSearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        sessions={filteredSessions}
-        currentSessionId={currentSessionId}
-        onSelectSession={handleSelectSession}
-        onDeleteSession={handleDeleteSession}
-        onTogglePin={handleTogglePin}
-        onRenameSession={handleRenameSession}
-      />
-      {isBatchMode ? (
+      )}
+      {isOpenClawSessionView && (
+        <OpenClawSessionSearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          items={openclawItems}
+          currentSessionKey={openclawCurrentSessionKey}
+          onSelect={handleSelectOpenClawSession}
+          onDelete={handleDeleteOpenClawSession}
+          onTogglePin={handleToggleOpenClawPin}
+          onRename={handleRenameOpenClawSession}
+        />
+      )}
+      {!isOpenClawSessionView && isBatchMode ? (
         <div className="px-3 pb-3 pt-1 flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary">
             <input

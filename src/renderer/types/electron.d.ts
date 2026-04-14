@@ -62,6 +62,7 @@ interface CoworkConfig {
   memoryUserMemoriesMaxItems: number;
   skipMissedJobs: boolean;
   openClawSessionPolicy: OpenClawSessionPolicyConfig;
+  sessionViewMode: 'legacy' | 'openclaw';
 }
 
 type CoworkConfigUpdate = Partial<Pick<
@@ -75,6 +76,7 @@ type CoworkConfigUpdate = Partial<Pick<
   | 'memoryGuardLevel'
   | 'memoryUserMemoriesMaxItems'
   | 'skipMissedJobs'
+  | 'sessionViewMode'
 >>;
 
 interface CoworkUserMemoryEntry {
@@ -320,12 +322,67 @@ interface IElectronAPI {
       install: () => Promise<{ success: boolean; status?: OpenClawEngineStatus; error?: string }>;
       retryInstall: () => Promise<{ success: boolean; status?: OpenClawEngineStatus; error?: string }>;
       restartGateway: () => Promise<{ success: boolean; status?: OpenClawEngineStatus; error?: string }>;
+      debugListSessions: () => Promise<{ success: boolean; result?: Record<string, unknown>; error?: string }>;
       onProgress: (callback: (status: OpenClawEngineStatus) => void) => () => void;
     };
     sessionPolicy: {
       get: () => Promise<{ success: boolean; config?: OpenClawSessionPolicyConfig; error?: string }>;
       set: (config: OpenClawSessionPolicyConfig) => Promise<{ success: boolean; config?: OpenClawSessionPolicyConfig; error?: string }>;
     };
+  };
+  openclawSessions: {
+    list: () => Promise<{ success: boolean; result?: { sessions: Array<Record<string, unknown> & { bindingState?: 'current' | 'stale' | 'unknown' }>; [key: string]: unknown }; error?: string }>;
+    getHistory: (sessionKey: string) => Promise<{ success: boolean; result?: { sessionKey: string; messages: unknown[]; raw: Record<string, unknown> }; error?: string }>;
+    send: (input: {
+      sessionKey: string;
+      message: string;
+      idempotencyKey: string;
+      thinking?: string;
+      deliver?: boolean;
+      timeoutMs?: number;
+      attachments?: Array<{
+        type?: string;
+        mimeType?: string;
+        fileName?: string;
+        content: string;
+      }>;
+    }) => Promise<{ success: boolean; result?: { runId?: string; status?: string; [key: string]: unknown }; error?: string }>;
+    abort: (sessionKey: string) => Promise<{ success: boolean; result?: { ok?: boolean; aborted?: boolean; runIds?: string[]; [key: string]: unknown }; error?: string }>;
+    delete: (sessionKey: string) => Promise<{ success: boolean; result?: Record<string, unknown>; error?: string }>;
+    patch: (input: { sessionKey: string; label?: string | null; pinned?: boolean; model?: string | null }) => Promise<{ success: boolean; result?: Record<string, unknown>; error?: string }>;
+    onStreamEvent: (callback: (data:
+      | {
+        kind: 'chat';
+        sessionKey: string;
+        runId: string | null;
+        seq: number | null;
+        state: 'delta' | 'final' | 'aborted' | 'error';
+        message?: unknown;
+        errorMessage?: string;
+        stopReason?: string;
+        receivedAt: number;
+      }
+      | {
+        kind: 'agent';
+        sessionKey: string;
+        runId: string | null;
+        seq: number | null;
+        stream: 'assistant' | 'tool' | 'lifecycle' | 'error';
+        data?: unknown;
+        receivedAt: number;
+      }
+      | {
+        kind: 'session';
+        sessionKey: string;
+        event: 'userMessage';
+        message: {
+          role: 'user';
+          content: string;
+        };
+        source: 'historySync';
+        receivedAt: number;
+      }
+    ) => void) => () => void;
   };
   ipcRenderer: {
     send: (channel: string, ...args: any[]) => void;

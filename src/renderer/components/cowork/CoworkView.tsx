@@ -1,27 +1,46 @@
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useRef,useState } from 'react';
-import { useDispatch,useSelector } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { CoworkSessionViewMode } from '../../../common/coworkSessionViewMode';
 import { agentService } from '../../services/agent';
 import { coworkService } from '../../services/cowork';
 import { i18nService } from '../../services/i18n';
+import { openclawSessionService } from '../../services/openclawSessionService';
 import { quickActionService } from '../../services/quickAction';
 import { skillService } from '../../services/skill';
-import { RootState } from '../../store';
+import type { RootState } from '../../store';
 import {
   selectCoworkConfig,
   selectCurrentSession,
   selectIsOpenClawEngine,
   selectIsStreaming,
 } from '../../store/selectors/coworkSelectors';
-import { addMessage, clearCurrentSession, setCurrentSession, setStreaming, updateSessionStatus } from '../../store/slices/coworkSlice';
+import {
+  selectVisibleCurrentOpenClawItem,
+  selectVisibleOpenClawItems,
+} from '../../store/selectors/openclawSessionSelectors';
+import {
+  addMessage,
+  clearCurrentSession,
+  setCurrentSession,
+  setDraftPrompt,
+  setStreaming,
+  updateSessionStatus,
+} from '../../store/slices/coworkSlice';
 import { clearSelection,selectAction, setActions } from '../../store/slices/quickActionSlice';
 import { clearActiveSkills, setActiveSkillIds } from '../../store/slices/skillSlice';
-import type { CoworkImageAttachment, CoworkSession, OpenClawEngineStatus } from '../../types/cowork';
-import { toOpenClawModelRef } from '../../utils/openclawModelRef';
+import {
+  type CoworkImageAttachment,
+  type CoworkSession,
+  type OpenClawEngineStatus,
+} from '../../types/cowork';
+import { resolveOpenClawModelRef, toOpenClawModelRef } from '../../utils/openclawModelRef';
 import ComposeIcon from '../icons/ComposeIcon';
 import SidebarToggleIcon from '../icons/SidebarToggleIcon';
 import ModelSelector from '../ModelSelector';
+import OpenClawSessionDetail from '../openclawSessions/OpenClawSessionDetail';
+import OpenClawSessionInput from '../openclawSessions/OpenClawSessionInput';
 import { PromptPanel,QuickActionBar } from '../quick-actions';
 import type { SettingsOpenOptions } from '../Settings';
 import WindowTitleBar from '../window/WindowTitleBar';
@@ -61,6 +80,25 @@ const CoworkView: React.FC<CoworkViewProps> = ({ onRequestAppSettings, onShowSki
   const isStreaming = useSelector(selectIsStreaming);
   const config = useSelector(selectCoworkConfig);
   const isOpenClawEngine = useSelector(selectIsOpenClawEngine);
+  const openclawCurrentSessionKey = useSelector((state: RootState) => state.openclawSession.currentSessionKey);
+  const openclawCurrentHistory = useSelector((state: RootState) => state.openclawSession.currentHistory);
+  const openclawProjectionBySessionKey = useSelector((state: RootState) => state.openclawSession.projectionBySessionKey);
+  const openclawItems = useSelector(selectVisibleOpenClawItems);
+  const openclawDraftSessionKey = useSelector((state: RootState) => state.openclawSession.draftSessionKey);
+  const openclawDraftModelRef = useSelector((state: RootState) => state.openclawSession.draftModelRef);
+  const openclawLoadingHistory = useSelector((state: RootState) => state.openclawSession.loadingHistory);
+  const openclawSending = useSelector((state: RootState) => state.openclawSession.sending);
+  const currentOpenClawItem = useSelector(selectVisibleCurrentOpenClawItem);
+  const isOpenClawSessionView = config.sessionViewMode === CoworkSessionViewMode.OpenClaw;
+  const openclawProjectedHistory = openclawCurrentSessionKey
+    ? openclawProjectionBySessionKey[openclawCurrentSessionKey]
+      ? {
+        sessionKey: openclawCurrentSessionKey,
+        messages: openclawProjectionBySessionKey[openclawCurrentSessionKey].messages,
+        raw: openclawProjectionBySessionKey[openclawCurrentSessionKey].history?.raw ?? openclawCurrentHistory?.raw ?? {},
+      }
+      : openclawCurrentHistory
+    : openclawCurrentHistory;
 
   const activeSkillIds = useSelector((state: RootState) => state.skill.activeSkillIds);
   const skills = useSelector((state: RootState) => state.skill.skills);
@@ -426,6 +464,13 @@ const CoworkView: React.FC<CoworkViewProps> = ({ onRequestAppSettings, onShowSki
 
   // Handle prompt selection from QuickAction
   const handleQuickActionPromptSelect = (prompt: string) => {
+    if (isOpenClawDraftView && openclawDraftSessionKey) {
+      dispatch(setDraftPrompt({ sessionId: openclawDraftSessionKey, draft: prompt }));
+      window.dispatchEvent(new CustomEvent('cowork:focus-input', {
+        detail: { clear: false },
+      }));
+      return;
+    }
     // Fill the prompt into input
     promptInputRef.current?.setValue(prompt);
     promptInputRef.current?.focus();
@@ -460,6 +505,36 @@ const CoworkView: React.FC<CoworkViewProps> = ({ onRequestAppSettings, onShowSki
     };
   }, [currentSession, isOpenClawEngine]);
 
+  useEffect(() => {
+    if (!isOpenClawSessionView) {
+      return;
+    }
+    if (openclawCurrentSessionKey || openclawDraftSessionKey) {
+      return;
+    }
+
+    openclawSessionService.startDraftSession();
+  }, [isOpenClawSessionView, openclawCurrentSessionKey, openclawDraftSessionKey]);
+
+  useEffect(() => {
+    if (!isOpenClawSessionView) {
+      return;
+    }
+    if (!openclawCurrentSessionKey || openclawDraftSessionKey) {
+      return;
+    }
+    if (openclawItems.some((item) => item.sessionKey === openclawCurrentSessionKey)) {
+      return;
+    }
+
+    openclawSessionService.startDraftSession();
+  }, [
+    isOpenClawSessionView,
+    openclawCurrentSessionKey,
+    openclawDraftSessionKey,
+    openclawItems,
+  ]);
+
   if (!isInitialized) {
     return (
       <div className="flex-1 h-full flex flex-col bg-background">
@@ -480,6 +555,11 @@ const CoworkView: React.FC<CoworkViewProps> = ({ onRequestAppSettings, onShowSki
   const isEngineReady = isOpenClawEngine
     ? isOpenClawReadyForSession(openClawStatus)
     : true;
+
+  const isOpenClawDraftView = isOpenClawSessionView && Boolean(openclawDraftSessionKey);
+  const draftHeaderSelectedModel = openclawDraftModelRef?.trim()
+    ? resolveOpenClawModelRef(openclawDraftModelRef, availableModels)
+    : null;
 
   const homeHeader = (
     <div className="draggable flex h-12 items-center justify-between px-4 border-b border-border shrink-0">
@@ -525,6 +605,48 @@ const CoworkView: React.FC<CoworkViewProps> = ({ onRequestAppSettings, onShowSki
     </div>
   );
 
+  const draftHomeHeader = (
+    <div className="draggable flex h-12 items-center justify-between border-b border-border px-4 shrink-0">
+      <div className="non-draggable h-8 flex items-center">
+        {isSidebarCollapsed && (
+          <div className={`flex items-center gap-1 mr-2 ${isMac ? 'pl-[68px]' : ''}`}>
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-secondary hover:bg-surface-raised transition-colors"
+            >
+              <SidebarToggleIcon className="h-4 w-4" isCollapsed={true} />
+            </button>
+            <button
+              type="button"
+              onClick={onNewChat}
+              className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-secondary hover:bg-surface-raised transition-colors"
+            >
+              <ComposeIcon className="h-4 w-4" />
+            </button>
+            {updateBadge}
+          </div>
+        )}
+        <ModelSelector
+          value={draftHeaderSelectedModel}
+          defaultLabel={i18nService.t('coworkOpenClawSessionDefaultModel')}
+          onChange={async (nextModel) => {
+            openclawSessionService.updateDraftModel(nextModel ? toOpenClawModelRef(nextModel) : null);
+          }}
+        />
+      </div>
+      <div className="non-draggable flex items-center">
+        <div className="flex items-center gap-1.5 mr-2 px-2.5 py-1">
+          <ShieldCheckIcon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+          <span className="text-xs text-green-600 dark:text-green-400 whitespace-nowrap">
+            {i18nService.t('lobsterGuardEnabled')}
+          </span>
+        </div>
+        <WindowTitleBar inline />
+      </div>
+    </div>
+  );
+
   // Engine status banner for error/non-running states (starting overlay is now global in App.tsx)
   const engineStatusBanner = shouldShowEngineStatus && openClawStatus && openClawStatus.phase !== 'starting' ? (
     <div className={`shrink-0 flex items-center justify-between px-4 py-2 text-xs ${isEngineError
@@ -551,8 +673,141 @@ const CoworkView: React.FC<CoworkViewProps> = ({ onRequestAppSettings, onShowSki
     </div>
   ) : null;
 
-  // When there's a current session, show the session detail view
-  if (currentSession) {
+  if (isOpenClawDraftView) {
+    return (
+      <div className="flex-1 flex flex-col bg-background h-full">
+        {engineStatusBanner}
+        {draftHomeHeader}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="max-w-3xl mx-auto px-4 py-16 space-y-12">
+            <div className="text-center space-y-5">
+              <img src="logo.png" alt="logo" className="w-16 h-16 mx-auto" />
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                {i18nService.t('coworkWelcome')}
+              </h2>
+              <p className="text-sm text-secondary max-w-md mx-auto">
+                {i18nService.t('coworkDescription')}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="shadow-glow-accent rounded-2xl">
+                <OpenClawSessionInput
+                  sessionKey={openclawDraftSessionKey ?? ''}
+                  modelRef={openclawDraftModelRef}
+                  showModelSelector={false}
+                  sending={openclawSending}
+                  disabled={!isEngineReady}
+                  embedded
+                  onSubmit={async (input) => {
+                    return openclawSessionService.sendDraftMessage({
+                      message: input.message,
+                      attachments: input.attachments,
+                    });
+                  }}
+                  onStop={async () => {
+                    if (!openclawDraftSessionKey) {
+                      return;
+                    }
+                    await openclawSessionService.abortMessage(openclawDraftSessionKey);
+                  }}
+                  onModelChange={async (model) => {
+                    openclawSessionService.updateDraftModel(model?.trim() || null);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {selectedAction ? (
+                <PromptPanel
+                  action={selectedAction}
+                  onPromptSelect={handleQuickActionPromptSelect}
+                />
+              ) : (
+                <QuickActionBar actions={quickActions} onActionSelect={handleActionSelect} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isOpenClawSessionView && currentOpenClawItem) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        {engineStatusBanner}
+        <OpenClawSessionDetail
+          item={currentOpenClawItem}
+          history={isOpenClawDraftView ? null : openclawProjectedHistory}
+          loading={isOpenClawDraftView ? false : openclawLoadingHistory}
+          draft={isOpenClawDraftView}
+          draftSessionKey={openclawDraftSessionKey}
+          draftModelRef={openclawDraftModelRef}
+          sending={openclawSending}
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={onToggleSidebar}
+          onNewChat={onNewChat}
+          updateBadge={updateBadge}
+          onSend={async (input) => {
+            if (isOpenClawDraftView) {
+              return openclawSessionService.sendDraftMessage({
+                message: input.message,
+                attachments: input.attachments,
+              });
+            }
+            if (!currentOpenClawItem) {
+              return false;
+            }
+            return openclawSessionService.sendMessage({
+              sessionKey: currentOpenClawItem.sessionKey,
+              message: input.message,
+              attachments: input.attachments,
+            });
+          }}
+          onAbort={async () => {
+            if (!currentOpenClawItem) {
+              return false;
+            }
+            return openclawSessionService.abortMessage(currentOpenClawItem.sessionKey);
+          }}
+          onRename={async (title) => {
+            if (!currentOpenClawItem) return;
+            await openclawSessionService.patchSession({
+              sessionKey: currentOpenClawItem.sessionKey,
+              label: title,
+            });
+          }}
+          onTogglePinned={async () => {
+            if (!currentOpenClawItem) return;
+            await openclawSessionService.patchSession({
+              sessionKey: currentOpenClawItem.sessionKey,
+              pinned: !currentOpenClawItem.pinned,
+            });
+          }}
+          onSaveModel={async (model) => {
+            if (isOpenClawDraftView) {
+              openclawSessionService.updateDraftModel(model.trim() || null);
+              return;
+            }
+            if (!currentOpenClawItem) return;
+            await openclawSessionService.patchSession({
+              sessionKey: currentOpenClawItem.sessionKey,
+              model: model.trim() || null,
+            });
+          }}
+          onDelete={async () => {
+            if (!currentOpenClawItem) return;
+            await openclawSessionService.deleteSession(currentOpenClawItem.sessionKey);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // When there's a current legacy session, show the session detail view
+  if (!isOpenClawSessionView && currentSession) {
     return (
       <div className="flex-1 flex flex-col h-full">
         {engineStatusBanner}

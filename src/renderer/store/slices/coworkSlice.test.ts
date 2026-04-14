@@ -22,6 +22,7 @@ test('setConfig preserves loaded OpenClaw session policy', () => {
     memoryGuardLevel: 'strict',
     memoryUserMemoriesMaxItems: 12,
     skipMissedJobs: false,
+    sessionViewMode: 'legacy',
     openClawSessionPolicy: {
       keepAlive: '365d',
     },

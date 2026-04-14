@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import { IpcChannel as ScheduledTaskIpc } from '../scheduledTask/constants';
 import type { Platform } from '../shared/platform';
+import { OpenClawSessionIpcChannel } from './ipcHandlers/openclawSession';
 
 // 暴露安全的 API 到渲染进程
 contextBridge.exposeInMainWorld('electron', {
@@ -144,6 +145,7 @@ contextBridge.exposeInMainWorld('electron', {
       install: () => ipcRenderer.invoke('openclaw:engine:install'),
       retryInstall: () => ipcRenderer.invoke('openclaw:engine:retryInstall'),
       restartGateway: () => ipcRenderer.invoke('openclaw:engine:restartGateway'),
+      debugListSessions: () => ipcRenderer.invoke('openclaw:engine:debugListSessions'),
       onProgress: (callback: (status: any) => void) => {
         const handler = (_event: any, status: any) => callback(status);
         ipcRenderer.on('openclaw:engine:onProgress', handler);
@@ -154,6 +156,34 @@ contextBridge.exposeInMainWorld('electron', {
       get: () => ipcRenderer.invoke('openclaw:sessionPolicy:get'),
       set: (config: { keepAlive: '1d' | '7d' | '30d' | '365d' }) =>
         ipcRenderer.invoke('openclaw:sessionPolicy:set', config),
+    },
+  },
+  openclawSessions: {
+    list: () => ipcRenderer.invoke(OpenClawSessionIpcChannel.List),
+    getHistory: (sessionKey: string) => ipcRenderer.invoke(OpenClawSessionIpcChannel.GetHistory, sessionKey),
+    send: (input: {
+      sessionKey: string;
+      message: string;
+      idempotencyKey: string;
+      thinking?: string;
+      deliver?: boolean;
+      timeoutMs?: number;
+      attachments?: Array<{
+        type?: string;
+        mimeType?: string;
+        fileName?: string;
+        content: string;
+      }>;
+    }) =>
+      ipcRenderer.invoke(OpenClawSessionIpcChannel.Send, input),
+    abort: (sessionKey: string) => ipcRenderer.invoke(OpenClawSessionIpcChannel.Abort, sessionKey),
+    delete: (sessionKey: string) => ipcRenderer.invoke(OpenClawSessionIpcChannel.Delete, sessionKey),
+    patch: (input: { sessionKey: string; label?: string | null; pinned?: boolean; model?: string | null }) =>
+      ipcRenderer.invoke(OpenClawSessionIpcChannel.Patch, input),
+    onStreamEvent: (callback: (data: any) => void) => {
+      const handler = (_event: any, data: any) => callback(data);
+      ipcRenderer.on(OpenClawSessionIpcChannel.StreamEvent, handler);
+      return () => ipcRenderer.removeListener(OpenClawSessionIpcChannel.StreamEvent, handler);
     },
   },
   agents: {
@@ -233,6 +263,7 @@ contextBridge.exposeInMainWorld('electron', {
       memoryLlmJudgeEnabled?: boolean;
       memoryGuardLevel?: 'strict' | 'standard' | 'relaxed';
       memoryUserMemoriesMaxItems?: number;
+      sessionViewMode?: 'legacy' | 'openclaw';
     }) =>
       ipcRenderer.invoke('cowork:config:set', config),
     listMemoryEntries: (input: {

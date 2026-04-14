@@ -5,6 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import { CoworkSessionViewMode } from '../common/coworkSessionViewMode';
 import { buildScheduledTaskEnginePrompt } from '../scheduledTask/enginePrompt';
 import { migrateScheduledTaskRunsToOpenclaw, migrateScheduledTasksToOpenclaw } from '../scheduledTask/migrate';
 import { PlatformRegistry } from '../shared/platform';
@@ -21,6 +22,7 @@ import {
   rejectPairingRequest,
 } from './im/imPairingStore';
 import type { DingTalkInstanceConfig, FeishuInstanceConfig, Platform, QQInstanceConfig } from './im/types';
+import { registerOpenClawSessionHandlers } from './ipcHandlers/openclawSession';
 import {
   getCronJobService,
   initCronJobServiceManager,
@@ -2444,6 +2446,32 @@ if (!gotTheLock) {
     }
   });
 
+  ipcMain.handle('openclaw:engine:debugListSessions', async () => {
+    try {
+      if (!openClawRuntimeAdapter) {
+        throw new Error('OpenClaw runtime adapter not initialized.');
+      }
+      await openClawRuntimeAdapter.ensureReady();
+      await openClawRuntimeAdapter.connectGatewayIfNeeded();
+      const client = openClawRuntimeAdapter.getGatewayClient();
+      if (!client) {
+        throw new Error('OpenClaw gateway client is unavailable.');
+      }
+      const result = await client.request<Record<string, unknown>>('sessions.list', {
+        includeGlobal: true,
+        includeUnknown: true,
+        includeDerivedTitles: true,
+        includeLastMessage: true,
+      });
+      return { success: true, result };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to list OpenClaw sessions',
+      };
+    }
+  });
+
   // MCP Server IPC handlers
   ipcMain.handle('mcp:list', () => {
     try {
@@ -3320,6 +3348,8 @@ if (!gotTheLock) {
     memoryLlmJudgeEnabled?: boolean;
     memoryGuardLevel?: 'strict' | 'standard' | 'relaxed';
     memoryUserMemoriesMaxItems?: number;
+    skipMissedJobs?: boolean;
+    sessionViewMode?: 'legacy' | 'openclaw';
   }) => {
     try {
       const normalizedExecutionMode =
@@ -3352,6 +3382,11 @@ if (!gotTheLock) {
             Math.min(MAX_MEMORY_USER_MEMORIES_MAX_ITEMS, Math.floor(config.memoryUserMemoriesMaxItems))
           )
         : undefined;
+      const normalizedSessionViewMode = config.sessionViewMode === CoworkSessionViewMode.OpenClaw
+        ? CoworkSessionViewMode.OpenClaw
+        : config.sessionViewMode === CoworkSessionViewMode.Legacy
+          ? CoworkSessionViewMode.Legacy
+          : undefined;
       const normalizedConfig: Parameters<CoworkStore['setConfig']>[0] = {
         ...config,
         executionMode: normalizedExecutionMode,
@@ -3361,6 +3396,7 @@ if (!gotTheLock) {
         memoryLlmJudgeEnabled: normalizedMemoryLlmJudgeEnabled,
         memoryGuardLevel: normalizedMemoryGuardLevel,
         memoryUserMemoriesMaxItems: normalizedMemoryUserMemoriesMaxItems,
+        sessionViewMode: normalizedSessionViewMode,
       };
       const previousConfig = getCoworkStore().getConfig();
       const previousWorkingDir = previousConfig.workingDirectory;
@@ -3446,6 +3482,9 @@ if (!gotTheLock) {
         coworkSessionId: string,
       ) => getIMGatewayManager().primeConversationReplyRoute(platform as Platform, conversationId, coworkSessionId),
     }),
+    getOpenClawRuntimeAdapter: () => openClawRuntimeAdapter,
+  });
+  registerOpenClawSessionHandlers({
     getOpenClawRuntimeAdapter: () => openClawRuntimeAdapter,
   });
 

@@ -2,6 +2,8 @@ import { EyeIcon, EyeSlashIcon, XCircleIcon as XCircleIconSolid } from '@heroico
 import { ArrowTopRightOnSquareIcon, ChatBubbleLeftIcon, CheckCircleIcon, Cog6ToothIcon, CpuChipIcon, CubeIcon, EnvelopeIcon, InformationCircleIcon, KeyIcon, ShieldCheckIcon,SignalIcon, UserCircleIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+
+import type { CoworkSessionViewMode } from '../../common/coworkSessionViewMode';
 import { ProviderName, ProviderRegistry, resolveCodingPlanBaseUrl } from '../../shared/providers';
 import { type AppConfig, defaultConfig, getCustomProviderDefaultName, getProviderDisplayName, getVisibleProviders, isCustomProvider } from '../config';
 import { APP_ID, EXPORT_FORMAT_TYPE, EXPORT_PASSWORD } from '../constants/app';
@@ -24,6 +26,7 @@ import type {
   OpenClawEngineStatus,
   OpenClawSessionKeepAlive as OpenClawSessionKeepAliveValue,
 } from '../types/cowork';
+import { CoworkSessionViewMode as CoworkSessionViewModeValue } from '../types/cowork';
 import Modal from './common/Modal';
 import ErrorMessage from './ErrorMessage';
 import BrainIcon from './icons/BrainIcon';
@@ -709,6 +712,9 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
   const coworkConfig = useSelector(selectCoworkConfig);
 
   const [coworkAgentEngine, setCoworkAgentEngine] = useState<CoworkAgentEngine>(coworkConfig.agentEngine || 'openclaw');
+  const [coworkSessionViewMode, setCoworkSessionViewMode] = useState<CoworkSessionViewMode>(
+    coworkConfig.sessionViewMode || CoworkSessionViewModeValue.Legacy,
+  );
   const [coworkMemoryEnabled, setCoworkMemoryEnabled] = useState<boolean>(coworkConfig.memoryEnabled ?? true);
   const [coworkMemoryLlmJudgeEnabled, setCoworkMemoryLlmJudgeEnabled] = useState<boolean>(coworkConfig.memoryLlmJudgeEnabled ?? false);
   const [skipMissedJobs, setSkipMissedJobs] = useState<boolean>(coworkConfig.skipMissedJobs ?? false);
@@ -730,12 +736,14 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
 
   useEffect(() => {
     setCoworkAgentEngine(coworkConfig.agentEngine || 'openclaw');
+    setCoworkSessionViewMode(coworkConfig.sessionViewMode || CoworkSessionViewModeValue.Legacy);
     setCoworkMemoryEnabled(coworkConfig.memoryEnabled ?? true);
     setCoworkMemoryLlmJudgeEnabled(coworkConfig.memoryLlmJudgeEnabled ?? false);
     setSkipMissedJobs(coworkConfig.skipMissedJobs ?? false);
     setOpenClawSessionKeepAlive(coworkConfig.openClawSessionPolicy?.keepAlive ?? '30d');
   }, [
     coworkConfig.agentEngine,
+    coworkConfig.sessionViewMode,
     coworkConfig.memoryEnabled,
     coworkConfig.memoryLlmJudgeEnabled,
     coworkConfig.skipMissedJobs,
@@ -1358,6 +1366,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
   };
 
   const hasCoworkConfigChanges = coworkAgentEngine !== coworkConfig.agentEngine
+    || coworkSessionViewMode !== coworkConfig.sessionViewMode
     || coworkMemoryEnabled !== coworkConfig.memoryEnabled
     || coworkMemoryLlmJudgeEnabled !== coworkConfig.memoryLlmJudgeEnabled
     || skipMissedJobs !== (coworkConfig.skipMissedJobs ?? false)
@@ -1707,6 +1716,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
       if (hasCoworkConfigChanges) {
         const updated = await coworkService.updateConfig({
           agentEngine: coworkAgentEngine,
+          sessionViewMode: coworkSessionViewMode,
           memoryEnabled: coworkMemoryEnabled,
           memoryLlmJudgeEnabled: coworkMemoryLlmJudgeEnabled,
           skipMissedJobs,
@@ -2750,6 +2760,23 @@ const Settings: React.FC<SettingsProps> = ({ onClose, initialTab, notice, notice
                   </span>
                 </span>
               </div>
+            </div>
+            <div className="space-y-2 rounded-xl border px-4 py-4 border-border">
+              <div className="text-sm font-medium text-foreground">
+                {i18nService.t('coworkSessionViewModeTitle')}
+              </div>
+              <div className="text-xs text-secondary">
+                {i18nService.t('coworkSessionViewModeHint')}
+              </div>
+              <ThemedSelect
+                id="cowork-session-view-mode"
+                value={coworkSessionViewMode}
+                onChange={(value) => setCoworkSessionViewMode(value as CoworkSessionViewMode)}
+                options={[
+                  { value: CoworkSessionViewModeValue.Legacy, label: i18nService.t('coworkSessionViewModeLegacy') },
+                  { value: CoworkSessionViewModeValue.OpenClaw, label: i18nService.t('coworkSessionViewModeOpenClaw') },
+                ]}
+              />
             </div>
             {isOpenClawAgentEngine && (
               <div className="space-y-3 rounded-xl border px-4 py-4 border-border">

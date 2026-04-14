@@ -7,6 +7,10 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
+  CoworkSessionViewMode,
+  type CoworkSessionViewMode as CoworkSessionViewModeValue,
+} from '../common/coworkSessionViewMode';
+import {
   type CoworkMemoryGuardLevel,
   extractTurnMemoryChanges,
   isQuestionLikeMemoryText,
@@ -456,6 +460,7 @@ export interface CoworkConfig {
   memoryGuardLevel: CoworkMemoryGuardLevel;
   memoryUserMemoriesMaxItems: number;
   skipMissedJobs: boolean;
+  sessionViewMode: CoworkSessionViewModeValue;
 }
 
 export type CoworkConfigUpdate = Partial<Pick<
@@ -469,6 +474,7 @@ CoworkConfig,
   | 'memoryGuardLevel'
   | 'memoryUserMemoriesMaxItems'
   | 'skipMissedJobs'
+  | 'sessionViewMode'
 >>;
 
 export interface ApplyTurnMemoryUpdatesOptions {
@@ -1047,6 +1053,7 @@ export class CoworkStore {
       'memoryGuardLevel',
       'memoryUserMemoriesMaxItems',
       'skipMissedJobs',
+      'sessionViewMode',
     ] as const;
     const configRows = this.getAll<{ key: string; value: string }>(
       `SELECT key, value FROM cowork_config WHERE key IN (${configKeys.map(() => '?').join(', ')})`,
@@ -1073,6 +1080,9 @@ export class CoworkStore {
         Number(cfg.get('memoryUserMemoriesMaxItems')),
       ),
       skipMissedJobs: parseBooleanConfig(cfg.get('skipMissedJobs'), false),
+      sessionViewMode: cfg.get('sessionViewMode') === CoworkSessionViewMode.OpenClaw
+        ? CoworkSessionViewMode.OpenClaw
+        : CoworkSessionViewMode.Legacy,
     };
   }
 
@@ -1190,6 +1200,23 @@ export class CoworkStore {
       `,
         )
         .run(String(clampMemoryUserMemoriesMaxItems(config.memoryUserMemoriesMaxItems)), now);
+    }
+
+    if (config.sessionViewMode !== undefined) {
+      const normalizedSessionViewMode = config.sessionViewMode === CoworkSessionViewMode.OpenClaw
+        ? CoworkSessionViewMode.OpenClaw
+        : CoworkSessionViewMode.Legacy;
+      this.db
+        .prepare(
+          `
+        INSERT INTO cowork_config (key, value, updated_at)
+        VALUES ('sessionViewMode', ?, ?)
+        ON CONFLICT(key) DO UPDATE SET
+          value = excluded.value,
+          updated_at = excluded.updated_at
+      `,
+        )
+        .run(normalizedSessionViewMode, now);
     }
 
     if (config.skipMissedJobs !== undefined) {
