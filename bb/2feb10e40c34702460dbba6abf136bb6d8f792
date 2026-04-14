@@ -1,0 +1,36 @@
+src/renderer/config.ts
+  148fe58d3075ae54 27-28,82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "bb2feb10e40c34702460dbba6abf136bb6d8f792",
+  "prompts": {
+    "148fe58d3075ae54": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8b53-4bf7-7a40-ac28-079b13a14482",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "4bb80c910d404ddd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d849f-e76c-7653-b744-6b970812635b",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 733,
+      "total_deletions": 276,
+      "accepted_lines": 733,
+      "overriden_lines": 0
+    }
+  }
+}
