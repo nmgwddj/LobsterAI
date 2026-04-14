@@ -1,0 +1,35 @@
+tests/pruneOpenClawRuntime.test.ts
+  127df845c347e70e 1-18
+scripts/openclaw-runtime-packaging.cjs
+  127df845c347e70e 1-69
+scripts/build-openclaw-runtime.sh
+  127df845c347e70e 238,254-255,257,268,275-277,304-309
+scripts/electron-builder-hooks.cjs
+  127df845c347e70e 10,173,175,183,186-202
+scripts/finalize-openclaw-runtime.cjs
+  127df845c347e70e 1-112
+scripts/prune-openclaw-runtime.cjs
+  127df845c347e70e 76,83-86,95-100,254,365-372
+tests/openclawRuntimePackaging.test.ts
+  127df845c347e70e 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a57970883be5bf79c12a41aa37f5facc7b99dce8",
+  "prompts": {
+    "127df845c347e70e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8c4c-a920-7210-b7ca-0a28e16b8a81",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 350,
+      "total_deletions": 48,
+      "accepted_lines": 331,
+      "overriden_lines": 0
+    }
+  }
+}
