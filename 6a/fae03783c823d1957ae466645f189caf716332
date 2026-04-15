@@ -1,0 +1,44 @@
+package.json
+  d4b7eb7ab7d993a1 79
+scripts/prune-openclaw-runtime.cjs
+  d4b7eb7ab7d993a1 264-291
+src/main/libs/openclawConfigSync.runtime.test.ts
+  d4b7eb7ab7d993a1 203-285
+scripts/notarize.js
+  d4b7eb7ab7d993a1 4-11
+src/main/libs/openclawConfigSync.ts
+  d4b7eb7ab7d993a1 1044-1047,1049-1051,1053,1060
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "6afae03783c823d1957ae466645f189caf716332",
+  "prompts": {
+    "b5e83f6994d5ae75": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d901e-a9a2-71c0-97c1-d58e74ada4af",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 0,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "d4b7eb7ab7d993a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9096-d4d4-7370-bb3e-7fff6c96a5a5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 129,
+      "total_deletions": 53,
+      "accepted_lines": 129,
+      "overriden_lines": 0
+    }
+  }
+}
