@@ -1,0 +1,52 @@
+src/main/libs/openclawConfigSync.ts
+  9da1ff32d4289c44 49,1045,1068,1309,2027
+src/main/im/imDeliveryRoute.test.ts
+  9da1ff32d4289c44 94-104
+src/main/libs/enterpriseConfigSync.test.ts
+  9da1ff32d4289c44 62,65,69,71
+src/main/im/imGatewayManager.ts
+  9da1ff32d4289c44 40-42,2242,2369
+src/main/libs/openclawConfigSync.runtime.test.ts
+  9da1ff32d4289c44 200-201
+src/main/libs/enterpriseConfigSync.ts
+  9da1ff32d4289c44 234
+package.json
+  9da1ff32d4289c44 15-17
+src/shared/platform/constants.ts
+  9da1ff32d4289c44 47-48
+src/scheduledTask/origin.test.ts
+  9da1ff32d4289c44 56-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a5dfd4577cc50a7b2f1138382745133c43586379",
+  "prompts": {
+    "9da1ff32d4289c44": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d90b6-56f0-7d73-b545-d0755ab286b8",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 42,
+      "total_deletions": 15,
+      "accepted_lines": 42,
+      "overriden_lines": 0
+    },
+    "d4b7eb7ab7d993a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9096-d4d4-7370-bb3e-7fff6c96a5a5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 0,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
