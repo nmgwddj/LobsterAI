@@ -1,0 +1,146 @@
+src/main/libs/openclawHistory.test.ts
+  0e856091b8d7414c 2-8,72-87,127-131
+src/main/libs/agentEngine/openclawRuntimeAdapter.ts
+  0e856091b8d7414c 28,2617-2627,2681-2686,2789-2792,2832-2844,3170-3172
+src/main/libs/openclawHistory.ts
+  0e856091b8d7414c 13-14,90,106
+src/main/libs/agentEngine/openclawRuntimeAdapter.test.ts
+  0e856091b8d7414c 417-432
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8beb0f21d344510843874beed640a4323c655da6",
+  "prompts": {
+    "0e856091b8d7414c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9418-0e8f-7b73-89c0-14115b1a774f",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 93,
+      "total_deletions": 1,
+      "accepted_lines": 86,
+      "overriden_lines": 0
+    },
+    "2b5e1682106ee2be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "13140a77-8ad3-4c52-afec-b918838c0916",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dylan <2894220@gmail.com>",
+      "messages": [],
+      "total_additions": 98,
+      "total_deletions": 1,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    },
+    "36ae73e8e8019232": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b0f2bcefffeCIz0TjAc0XNdxj-a8a2b82d-6392-4505-9ce0-d08a002536e8",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "4e97fcf20b0aeb9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2f030b6adffe4k4QsJ97QbI2Wt-46a24959-9ac4-43e3-8dbe-f2fd00a8b712",
+        "model": "unknown"
+      },
+      "human_author": "Dylan <2894220@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "5656e13bdf531606": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b0f2bcefffeCIz0TjAc0XNdxj-8ae6b4f5-d6bb-4548-ad67-57118057642f",
+        "model": "unknown"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 4,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    },
+    "6ec1ba8929569836": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2f030b6adffe4k4QsJ97QbI2Wt-441063ac-11a7-4844-bc45-1ae2c8795fad",
+        "model": "unknown"
+      },
+      "human_author": "Dylan <2894220@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 15,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "80e98782acb59bb8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36903a43-c0fb-44b0-9057-c120788ddeea",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang <zhangxiaochang@corp.netease.com>",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 8,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    },
+    "85d7c7adb8e93d00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f3ebc38-d97e-4ade-ab75-ba50d4d6e41b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "932a2b4cc28e62a0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2f030b6adffe4k4QsJ97QbI2Wt-c4481644-104a-4822-8fcd-818478edb175",
+        "model": "unknown"
+      },
+      "human_author": "Dylan <2894220@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 5,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "c4ce12fb3b579b0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae5d138b-e528-4b4e-b71f-35702f2329c9",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangxiaochang",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 5,
+      "accepted_lines": 43,
+      "overriden_lines": 0
+    }
+  }
+}
