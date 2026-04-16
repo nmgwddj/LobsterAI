@@ -1,0 +1,23 @@
+src/main/main.ts
+  0e7dfe52a7a58c2c 109-111,743-756,2050,5302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "aef6ac73854017977e309c0c4227d7e3d25eb74f",
+  "prompts": {
+    "0e7dfe52a7a58c2c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d944f-44e0-7e42-8672-1802b642aea7",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 11,
+      "accepted_lines": 27,
+      "overriden_lines": 0
+    }
+  }
+}
