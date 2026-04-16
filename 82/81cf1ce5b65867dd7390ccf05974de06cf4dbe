@@ -1,0 +1,42 @@
+src/main/libs/openclawHistory.ts
+  0e856091b8d7414c 13-14,90,106
+src/main/libs/agentEngine/openclawRuntimeAdapter.test.ts
+  0e856091b8d7414c 417-432
+src/main/libs/agentEngine/openclawRuntimeAdapter.ts
+  0e856091b8d7414c 28,2617-2627,2681-2686,2789-2792,2832-2844,3170-3172
+src/main/libs/openclawHistory.test.ts
+  0e856091b8d7414c 2-8,72-87,127-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8281cf1ce5b65867dd7390ccf05974de06cf4dbe",
+  "prompts": {
+    "0e856091b8d7414c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9418-0e8f-7b73-89c0-14115b1a774f",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Dylan",
+      "messages": [],
+      "total_additions": 93,
+      "total_deletions": 1,
+      "accepted_lines": 93,
+      "overriden_lines": 0
+    },
+    "de0c0ed43cb27017": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2b31d0e73ffeUNhlpDlIMyGQZI-a59529fa-8728-4c90-a8d0-2bbe5292d445",
+        "model": "unknown"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
