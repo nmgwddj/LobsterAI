@@ -162,13 +162,24 @@ class CoworkService {
     });
     this.streamListenerCleanups.push(errorCleanup);
 
-    // Sessions changed listener (new channel sessions discovered by polling)
+    // Sessions changed listener (new channel sessions discovered by polling,
+    // or reconcileWithHistory replaced messages for a channel session)
     const sessionsChangedCleanup = cowork.onSessionsChanged(() => {
       const beforeState = store.getState().cowork;
       console.log('[CoworkService] onSessionsChanged: received IPC event, before sessions:', beforeState.sessions.length, 'sessionIds:', beforeState.sessions.map(s => s.id).slice(0, 5));
       void this.loadSessions().then(() => {
         const state = store.getState().cowork;
         console.log('[CoworkService] onSessionsChanged: loadSessions complete, total sessions:', state.sessions.length, 'sessionIds:', state.sessions.map(s => s.id).slice(0, 5));
+
+        // Reload the active session's full message list so that messages
+        // replaced by reconcileWithHistory (bulk SQLite replace) are reflected
+        // in the conversation view, not just the sidebar.  Without this,
+        // user messages synced from gateway history would only appear after
+        // the user manually re-enters the conversation.
+        const currentId = state.currentSessionId;
+        if (currentId) {
+          void this.loadSession(currentId);
+        }
       }).catch((err) => {
         console.error('[CoworkService] onSessionsChanged: loadSessions FAILED:', err);
       });
