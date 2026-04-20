@@ -36,6 +36,7 @@ import { matchesShortcut } from './services/shortcuts';
 import AppUpdateBadge from './components/update/AppUpdateBadge';
 import AppUpdateModal from './components/update/AppUpdateModal';
 import PrivacyDialog from './components/PrivacyDialog';
+import WelcomeDialog from './components/WelcomeDialog';
 
 const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
@@ -52,6 +53,7 @@ const App: React.FC = () => {
   const [downloadProgress, setDownloadProgress] = useState<AppUpdateDownloadProgress | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [privacyAgreed, setPrivacyAgreed] = useState<boolean | null>(null);
+  const [showWelcome, setShowWelcome] = useState(true);
   const [enterpriseConfig, setEnterpriseConfig] = useState<{
     ui?: Record<string, 'hide' | 'disable' | 'readonly'>;
     disableUpdate?: boolean;
@@ -435,6 +437,10 @@ const App: React.FC = () => {
     window.electron.window.close();
   }, []);
 
+  const handleWelcomeClose = useCallback(() => setShowWelcome(false), []);
+  const handleWelcomeLogin = useCallback(() => setShowWelcome(false), []);
+  const handleWelcomeCustomModel = useCallback(() => setShowWelcome(false), []);
+
   const handlePermissionResponse = useCallback(async (result: CoworkPermissionResult) => {
     if (!pendingPermission) return;
     await coworkService.respondToPermission(pendingPermission.requestId, result);
@@ -776,6 +782,13 @@ const App: React.FC = () => {
         <PrivacyDialog
           onAccept={handlePrivacyAccept}
           onReject={handlePrivacyReject}
+        />
+      )}
+      {showWelcome && (
+        <WelcomeDialog
+          onLogin={handleWelcomeLogin}
+          onCustomModel={handleWelcomeCustomModel}
+          onClose={handleWelcomeClose}
         />
       )}
     </div>
