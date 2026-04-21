@@ -256,6 +256,8 @@ export interface NimGatewayStatus {
   lastOutboundAt: number | null;
 }
 
+// NIM supports max 3 instances (enabled or not), may use different accounts or AppKeys.
+// See: https://doc.yunxin.163.com/messaging2/ai-guide/TMwNzk4MzU?platform=client#多实例配置
 export const MAX_NIM_INSTANCES = 3;
 
 export interface NimInstanceStatus extends NimGatewayStatus {
