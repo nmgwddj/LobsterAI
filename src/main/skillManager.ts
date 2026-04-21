@@ -1546,9 +1546,19 @@ export class SkillManager {
       throw new Error('Built-in skills cannot be deleted');
     }
 
-    const targetDir = resolveWithin(root, id);
+    let targetDir = resolveWithin(root, id);
     if (!fs.existsSync(targetDir)) {
-      throw new Error('Skill not found');
+      const bundledRoot = this.getBundledSkillsRoot();
+      if (bundledRoot && bundledRoot !== root) {
+        const bundledTarget = resolveWithin(bundledRoot, id);
+        if (fs.existsSync(bundledTarget)) {
+          targetDir = bundledTarget;
+        } else {
+          throw new Error('Skill not found');
+        }
+      } else {
+        throw new Error('Skill not found');
+      }
     }
 
     fs.rmSync(targetDir, { recursive: true, force: true });
@@ -2142,6 +2152,17 @@ export class SkillManager {
     const builtInRoot = this.getBundledSkillsRoot();
     if (!builtInRoot || !fs.existsSync(builtInRoot)) {
       return new Set();
+    }
+    try {
+      const configPath = path.join(builtInRoot, SKILLS_CONFIG_FILE);
+      if (fs.existsSync(configPath)) {
+        const parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (parsed?.defaults && typeof parsed.defaults === 'object') {
+          return new Set(Object.keys(parsed.defaults));
+        }
+      }
+    } catch (error) {
+      console.warn('[skills] Failed to parse skills.config.json for built-in skill list:', error);
     }
     return new Set(listSkillDirs(builtInRoot).map(dir => path.basename(dir)));
   }
